@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// components/EventModal.tsx
+import React from "react";
 import {
   View,
   Text,
@@ -7,15 +8,17 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import Alert from "./Alert";
 import CustomModal from "./CustomModal";
+import { useDispatch } from "react-redux";
+import { showAlert } from "../features/alertSlice";
+import { useJoinEventMutation } from "../api/api";
 
 type EventModalProps = {
   visible: boolean;
   onClose: () => void;
   event?: any;
-  onJoin?: any;
-  imageUri?: any;
+
+  imageUri?: string | null;
   isJoining?: boolean;
 };
 
@@ -23,34 +26,31 @@ const EventModal: React.FC<EventModalProps> = ({
   visible,
   onClose,
   event,
-  onJoin,
+
   isJoining,
   imageUri,
 }) => {
-  const [alertMessage, setAlertMessage] = useState("");
-  const [alertType, setAlertType] = useState<"success" | "error">("success");
-  const [alertVisible, setAlertVisible] = useState(false);
-
-  const handleJoinEvent = async (eventId: number) => {
-    if (!onJoin) return;
-
+  const dispatch = useDispatch();
+  const [joinEvent] = useJoinEventMutation();
+  const onJoinHandle = async (eventId: number) => {
     try {
-      const response = await onJoin(eventId);
-
-      console.log("Response:", response);
-
-      const message = response?.data?.message || "Неизвестный ответ от сервера";
-      const isSuccess = response?.status === 200;
-
-      setAlertMessage(message);
-      setAlertType(isSuccess ? "success" : "error");
-      setAlertVisible(true);
+      await joinEvent(eventId).unwrap();
+      dispatch(
+        showAlert({
+          message: "Вы записались",
+          type: "success",
+        })
+      );
     } catch (error) {
-      console.error("Ошибка запроса:", error);
-      setAlertMessage("Ошибка при запросе участия.");
-      setAlertType("error");
-      setAlertVisible(true);
+      console.error("Ошибка при записи:", error);
+      dispatch(
+        showAlert({
+          message: "Ошибка при записи",
+          type: "error",
+        })
+      );
     }
+    onClose();
   };
 
   return (
@@ -77,7 +77,7 @@ const EventModal: React.FC<EventModalProps> = ({
 
       <TouchableOpacity
         style={styles.joinButton}
-        onPress={() => handleJoinEvent(event?.id)}
+        onPress={() => onJoinHandle(event?.id)}
         disabled={isJoining}
       >
         {isJoining ? (
@@ -86,8 +86,6 @@ const EventModal: React.FC<EventModalProps> = ({
           <Text style={styles.joinButtonText}>Записаться</Text>
         )}
       </TouchableOpacity>
-
-      <Alert message={alertMessage} type={alertType} visible={alertVisible} />
     </CustomModal>
   );
 };
@@ -112,8 +110,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 15,
   },
-  infoContainer: { width: "100%", marginBottom: 20 },
-  infoText: { fontSize: 16, marginBottom: 5 },
+  infoContainer: {
+    width: "100%",
+    marginBottom: 20,
+  },
+  infoText: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
   joinButton: {
     backgroundColor: "#007BFF",
     padding: 12,
@@ -122,7 +126,11 @@ const styles = StyleSheet.create({
     width: "100%",
     marginBottom: 10,
   },
-  joinButtonText: { color: "white", fontSize: 16, fontWeight: "bold" },
+  joinButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
 });
 
 export default EventModal;

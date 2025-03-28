@@ -4,7 +4,8 @@ module.exports = function (api) {
     presets: ["babel-preset-expo"],
     plugins: [
       "@babel/plugin-transform-react-jsx",
-      "react-native-reanimated/plugin", // Для совместимости с react-native-reanimated, если используется.
+      "react-native-reanimated/plugin",
+      "module:react-native-dotenv",
     ],
   };
 };

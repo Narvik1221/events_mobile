@@ -1,3 +1,4 @@
+// screens/EventsScreen.tsx
 import React, { useState } from "react";
 import {
   View,
@@ -7,20 +8,24 @@ import {
   TouchableOpacity,
   Image,
   TextInput,
+  Alert,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import {
   useGetEventsQuery,
   useGetCategoriesQuery,
   useJoinEventMutation,
+  useDeleteEventMutation,
 } from "../api/api";
 import EventModal from "../components/EventModal";
+import CustomModal from "../components/CustomModal";
+import { getAvatarUri } from "../lib/getAvatarUri";
 
 type EventType = {
   id: number;
   name: string;
   description: string;
-  avatar?: string;
+  avatar?: any;
   participantsCount: number;
   categories?: { id: number; name: string }[];
 };
@@ -30,7 +35,7 @@ type CategoryType = {
   name: string;
 };
 
-const EventsScreen: React.FC<{ navigation: any }> = () => {
+const EventsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   // Состояния для поиска и фильтрации по категории
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
@@ -52,6 +57,12 @@ const EventsScreen: React.FC<{ navigation: any }> = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [joinEvent] = useJoinEventMutation();
 
+  // Модальное окно подтверждения удаления
+  const [deleteConfirmModalVisible, setDeleteConfirmModalVisible] =
+    useState(false);
+  const [eventToDelete, setEventToDelete] = useState<EventType | null>(null);
+  const [deleteEvent, { isLoading: isDeleting }] = useDeleteEventMutation();
+
   const openModal = (event: EventType) => {
     setSelectedEvent(event);
     setImageUri(event.avatar || null);
@@ -64,49 +75,50 @@ const EventsScreen: React.FC<{ navigation: any }> = () => {
     setImageUri(null);
   };
 
-  const handleJoinEvent = async (eventId: number) => {
+  // Показываем модальное окно подтверждения удаления для выбранного события
+  const confirmDeleteEvent = (event: EventType) => {
+    setEventToDelete(event);
+    setDeleteConfirmModalVisible(true);
+  };
+
+  const handleDeleteEvent = async () => {
+    if (!eventToDelete) return;
     try {
-      await joinEvent(eventId).unwrap();
-      refetch(); // Обновляем список событий
-      if (selectedEvent) {
-        setSelectedEvent({
-          ...selectedEvent,
-          participantsCount: selectedEvent.participantsCount + 1,
-        });
-      }
+      await deleteEvent(eventToDelete.id).unwrap();
+      setDeleteConfirmModalVisible(false);
+      setEventToDelete(null);
+      refetch();
     } catch (error) {
-      console.error("Ошибка записи на мероприятие", error);
+      console.error("Ошибка удаления мероприятия", error);
+      Alert.alert("Ошибка", "Не удалось удалить мероприятие");
     }
   };
 
-  const renderItem = ({ item }: { item: EventType }) => {
-    let avatarUri = item.avatar;
-    if (
-      avatarUri &&
-      !avatarUri.startsWith("http://") &&
-      avatarUri.includes("uploads")
-    ) {
-      const parts = avatarUri.includes("\\")
-        ? avatarUri.split("\\")
-        : avatarUri.split("/");
-      avatarUri = "http://192.168.1.110:3000/uploads/events/" + parts.pop();
-    }
-
-    return (
+  const renderItem = ({ item }: { item: EventType }) => (
+    <View style={styles.eventItem}>
       <TouchableOpacity
         style={styles.item}
-        onPress={() => openModal({ ...item, avatar: avatarUri })}
+        onPress={() =>
+          openModal({ ...item, avatar: getAvatarUri(item.avatar) })
+        }
       >
-        {avatarUri ? (
-          <Image source={{ uri: avatarUri }} style={styles.avatar} />
-        ) : null}
+        <Image
+          source={{ uri: getAvatarUri(item.avatar) }}
+          style={styles.avatar}
+        />
         <View style={styles.textContainer}>
           <Text style={styles.eventName}>{item.name}</Text>
           <Text>{item.description}</Text>
         </View>
       </TouchableOpacity>
-    );
-  };
+      <TouchableOpacity
+        style={styles.deleteButton}
+        onPress={() => confirmDeleteEvent(item)}
+      >
+        <Text style={styles.deleteButtonText}>Удалить</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
@@ -151,13 +163,25 @@ const EventsScreen: React.FC<{ navigation: any }> = () => {
         />
       )}
 
-      {modalVisible && (
+      {/* Модальное окно для просмотра события */}
+      {modalVisible && selectedEvent && (
         <EventModal
-          event={selectedEvent}
-          imageUri={imageUri}
           visible={modalVisible}
           onClose={closeModal}
-          onJoin={handleJoinEvent}
+          event={selectedEvent}
+          imageUri={imageUri}
+        />
+      )}
+
+      {/* Модальное окно подтверждения удаления */}
+      {deleteConfirmModalVisible && (
+        <CustomModal
+          visible={deleteConfirmModalVisible}
+          onClose={() => setDeleteConfirmModalVisible(false)}
+          title="Вы уверены, что хотите удалить мероприятие?"
+          type="confirm"
+          onConfirm={handleDeleteEvent}
+          confirmText="Удалить"
         />
       )}
     </View>
@@ -174,6 +198,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 5,
   },
+  filterContainer: { marginBottom: 20 },
+  filterLabel: { fontSize: 16, marginBottom: 5 },
+  picker: {
+    height: 50,
+    width: "100%",
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 5,
+  },
+  eventItem: {
+    marginBottom: 10,
+  },
   item: {
     flexDirection: "row",
     alignItems: "center",
@@ -189,14 +225,17 @@ const styles = StyleSheet.create({
   },
   textContainer: { flex: 1 },
   eventName: { fontSize: 18, fontWeight: "bold" },
-  filterContainer: { marginBottom: 20 },
-  filterLabel: { fontSize: 16, marginBottom: 5 },
-  picker: {
-    height: 50,
-    width: "100%",
-    borderColor: "#ccc",
-    borderWidth: 1,
+  deleteButton: {
+    backgroundColor: "#dc3545",
+    padding: 10,
     borderRadius: 5,
+    alignItems: "center",
+    marginTop: 5,
+  },
+  deleteButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 

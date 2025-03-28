@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -14,23 +14,27 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import CustomButton from "../components/CustomButton";
-import { useCreateEventMutation, useGetCategoriesQuery } from "../api/api";
-import AddressPickerModal from "../components/AddressPickerModal"; // путь к модальному окну
+import { useUpdateEventMutation, useGetCategoriesQuery } from "../api/api";
+import AddressPickerModal from "../components/AddressPickerModal";
 
 type Props = any;
 
-const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
-  const [name, setName] = useState("");
-  const [startDate, setStartDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(new Date());
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
-  const [description, setDescription] = useState("");
-  const [avatar, setAvatar] = useState<string | null>(null);
+const EditEventScreen: React.FC<Props> = ({ route, navigation }) => {
+  const { event } = route.params;
+  // Инициализируем поля данными из выбранного мероприятия
+  const [name, setName] = useState(event.name);
+  const [startDate, setStartDate] = useState(new Date(event.startDate));
+  const [endDate, setEndDate] = useState(new Date(event.endDate));
+  const [latitude, setLatitude] = useState(String(event.latitude));
+  const [longitude, setLongitude] = useState(String(event.longitude));
+  const [description, setDescription] = useState(event.description);
+  const [avatar, setAvatar] = useState(event.avatar);
   const [avatarFile, setAvatarFile] = useState<any>(null);
 
   const [pickerValue, setPickerValue] = useState<number | null>(null);
-  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<number[]>(
+    event.categoryIds || []
+  );
 
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
@@ -40,12 +44,12 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
     error: categoriesError,
     isLoading: categoriesLoading,
   } = useGetCategoriesQuery();
-  const [createEvent, { error, isLoading }] = useCreateEventMutation();
+  const [updateEvent, { error, isLoading }] = useUpdateEventMutation();
 
   // Состояние для модального окна выбора адреса
   const [addressModalVisible, setAddressModalVisible] = useState(false);
 
-  // Функция выбора изображения
+  // Функция выбора изображения (аналогична CreateEventScreen)
   const pickImage = async () => {
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -101,8 +105,8 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
     setSelectedCategories(selectedCategories.filter((id) => id !== catId));
   };
 
-  // Функция создания события
-  const handleCreateEvent = async () => {
+  // Функция обновления мероприятия
+  const handleUpdateEvent = async () => {
     const formData = new FormData();
     formData.append("name", name);
     formData.append("startDate", startDate.toISOString());
@@ -116,15 +120,18 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
       formData.append("avatar", avatarFile as any);
     }
 
-    console.log("📤 Отправляем FormData:");
-    formData.forEach((value, key) => console.log(`  ${key}: ${value}`));
+    console.log("Отправляем данные для обновления:");
+    formData.forEach((value, key) => console.log(`${key}: ${value}`));
 
     try {
-      const response = await createEvent(formData).unwrap();
-      console.log("✅ Ответ сервера:", response);
-      navigation.navigate("Home");
+      const response = await updateEvent({
+        id: event.id,
+        data: formData,
+      }).unwrap();
+      console.log("Ответ сервера:", response);
+      navigation.navigate("EditEventsScreen");
     } catch (err) {
-      console.error("❌ Ошибка создания мероприятия:", err);
+      console.error("Ошибка обновления мероприятия:", err);
     }
   };
 
@@ -136,7 +143,7 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Создать мероприятие</Text>
+      <Text style={styles.title}>Редактировать мероприятие</Text>
       <TextInput
         style={styles.input}
         placeholder="Название"
@@ -180,7 +187,6 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
         />
       )}
 
-      {/* Вместо ввода координат – кнопка для выбора адреса */}
       <CustomButton
         title={latitude && longitude ? "Адрес указан" : "Указать адрес"}
         onPress={() => setAddressModalVisible(true)}
@@ -247,12 +253,11 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
       {avatar && <Image source={{ uri: avatar }} style={styles.image} />}
 
       <CustomButton
-        title="Создать"
-        onPress={handleCreateEvent}
+        title="Обновить"
+        onPress={handleUpdateEvent}
         disabled={isLoading}
       />
 
-      {/* Модальное окно для выбора адреса */}
       <AddressPickerModal
         visible={addressModalVisible}
         onClose={() => setAddressModalVisible(false)}
@@ -263,26 +268,10 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    padding: 20,
-    justifyContent: "center",
-  },
-  title: {
-    fontSize: 24,
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  label: {
-    fontSize: 16,
-    marginBottom: 5,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 10,
-    marginBottom: 10,
-  },
+  container: { flexGrow: 1, padding: 20, justifyContent: "center" },
+  title: { fontSize: 24, marginBottom: 20, textAlign: "center" },
+  label: { fontSize: 16, marginBottom: 5 },
+  input: { borderWidth: 1, borderColor: "#ccc", padding: 10, marginBottom: 10 },
   picker: {
     height: 50,
     width: "100%",
@@ -297,12 +286,7 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     alignItems: "center",
   },
-  image: {
-    width: 100,
-    height: 100,
-    alignSelf: "center",
-    marginVertical: 10,
-  },
+  image: { width: 100, height: 100, alignSelf: "center", marginVertical: 10 },
   selectedCategoriesContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -316,15 +300,8 @@ const styles = StyleSheet.create({
     marginRight: 5,
     marginBottom: 5,
   },
-  categoryText: {
-    fontSize: 14,
-    color: "#333",
-  },
-  coordsText: {
-    textAlign: "center",
-    marginBottom: 10,
-    fontWeight: "bold",
-  },
+  categoryText: { fontSize: 14, color: "#333" },
+  coordsText: { textAlign: "center", marginBottom: 10, fontWeight: "bold" },
 });
 
-export default CreateEventScreen;
+export default EditEventScreen;

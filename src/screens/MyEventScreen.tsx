@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import {
   useLeaveEventMutation,
 } from "../api/api";
 import EventModal from "../components/EventModal";
+import MyEventModal from "../components/MyEventModal";
 
 type EventType = {
   id: number;
@@ -27,22 +28,15 @@ type EventType = {
   categories?: { id: number; name: string }[];
 };
 
-type CategoryType = {
-  id: number;
-  name: string;
-};
-
 const MyEventsScreen: React.FC = () => {
-  const userId = useSelector((state: RootState) => state.auth.userId);
-  const { data: categories } = useGetCategoriesQuery();
+  const userId = useSelector((state: RootState) => state.user.userId);
+
   const {
     data: events,
     error,
     isLoading,
     refetch,
-  } = useGetUserEventsQuery({
-    userId,
-  });
+  } = useGetUserEventsQuery(null as any) as any;
 
   const [selectedEvent, setSelectedEvent] = useState<EventType | null>(null);
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -64,8 +58,8 @@ const MyEventsScreen: React.FC = () => {
   const handleLeaveEvent = async (eventId: number) => {
     try {
       await leaveEvent(eventId).unwrap();
-      refetch();
-      closeModal();
+
+      // closeModal();
     } catch (error) {
       console.error("Ошибка отмены участия", error);
     }
@@ -107,7 +101,7 @@ const MyEventsScreen: React.FC = () => {
       {isLoading ? (
         <Text>Загрузка...</Text>
       ) : error ? (
-        <Text>Ошибка загрузки</Text>
+        <Text>{error?.data?.message ?? "Ошибка загрузки"}</Text>
       ) : (
         <FlatList
           data={events}
@@ -117,12 +111,12 @@ const MyEventsScreen: React.FC = () => {
       )}
 
       {modalVisible && (
-        <EventModal
+        <MyEventModal
           event={selectedEvent}
           imageUri={imageUri}
           visible={modalVisible}
           onClose={closeModal}
-          onLeave={handleLeaveEvent}
+          onDelete={handleLeaveEvent}
         />
       )}
     </View>

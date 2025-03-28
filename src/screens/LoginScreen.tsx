@@ -7,7 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
-import { useLoginMutation } from "../api/api";
+import { useGetProfileQuery, useLoginMutation } from "../api/api";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "../features/authSlice";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -20,7 +20,8 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [password, setPassword] = useState("");
-  const [login, { data, error, isLoading }] = useLoginMutation();
+  const [login, { data, error, isLoading }] = useLoginMutation() as any;
+  const { refetch } = useGetProfileQuery();
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -38,6 +39,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       AsyncStorage.setItem("refreshToken", data.refreshToken)
         .then(() => console.log("Refresh token сохранён"))
         .catch((err) => console.error("Ошибка сохранения refresh token:", err));
+      refetch();
       navigation.navigate("Profile");
     }
   }, [data]);
@@ -77,7 +79,9 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         <Text style={styles.link}>Нет аккаунта? Зарегистрируйтесь</Text>
       </TouchableOpacity>
       {error && (
-        <Text style={styles.error}>Ошибка входа. Проверьте данные.</Text>
+        <Text style={styles.error}>
+          {error?.data?.message ?? `Ошибка входа. Проверьте данные.`}
+        </Text>
       )}
     </View>
   );

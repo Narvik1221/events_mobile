@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// components/MyEventModal.tsx
+import React from "react";
 import {
   View,
   Text,
@@ -7,8 +8,10 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import Alert from "./Alert";
+import { useDispatch } from "react-redux";
+import { showAlert } from "../features/alertSlice";
 import CustomModal from "./CustomModal";
+import { useLeaveEventMutation } from "../api/api";
 
 type MyEventModalProps = {
   visible: boolean;
@@ -27,25 +30,28 @@ const MyEventModal: React.FC<MyEventModalProps> = ({
   isDeleting,
   imageUri,
 }) => {
-  const [alertMessage, setAlertMessage] = useState("");
-  const [alertType, setAlertType] = useState<"success" | "error">("success");
-  const [alertVisible, setAlertVisible] = useState(false);
+  const dispatch = useDispatch();
+  const [leaveEvent] = useLeaveEventMutation();
 
   const handleDeleteEvent = async (eventId: number) => {
-    if (!onDelete) return;
-
     try {
-      await onDelete(eventId);
-      setAlertMessage("Мероприятие успешно удалено.");
-      setAlertType("success");
-      setAlertVisible(true);
-      onClose();
+      await leaveEvent(eventId).unwrap();
+      dispatch(
+        showAlert({
+          message: "Мероприятие успешно удалено.",
+          type: "success",
+        })
+      );
     } catch (error) {
       console.error("Ошибка удаления мероприятия:", error);
-      setAlertMessage("Ошибка при удалении мероприятия.");
-      setAlertType("error");
-      setAlertVisible(true);
+      dispatch(
+        showAlert({
+          message: "Ошибка при удалении мероприятия.",
+          type: "error",
+        })
+      );
     }
+    onClose();
   };
 
   return (
@@ -81,8 +87,6 @@ const MyEventModal: React.FC<MyEventModalProps> = ({
           <Text style={styles.deleteButtonText}>Удалить мероприятие</Text>
         )}
       </TouchableOpacity>
-
-      <Alert message={alertMessage} type={alertType} visible={alertVisible} />
     </CustomModal>
   );
 };

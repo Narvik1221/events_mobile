@@ -1,19 +1,19 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface AuthState {
-  accessToken: string | null;
-  refreshToken: string | null;
-  userId: string | null;
-  email: string | null;
-  name: string | null;
+  accessToken?: string | null;
+  refreshToken?: string | null;
+  userId?: string | null;
+  lastName?: string | null;
+  firstName?: string | null;
 }
 
 const initialState: AuthState = {
   accessToken: null,
   refreshToken: null,
   userId: null,
-  email: null,
-  name: null,
+  lastName: null,
+  firstName: null,
 };
 
 const authSlice = createSlice({
@@ -23,11 +23,11 @@ const authSlice = createSlice({
     setCredentials: (
       state,
       action: PayloadAction<{
-        accessToken: string;
+        accessToken?: string;
         refreshToken?: string;
         userId?: string;
-        email?: string;
-        name?: string;
+        lastName?: string;
+        firstName?: string;
       }>
     ) => {
       state.accessToken = action.payload.accessToken;
@@ -37,19 +37,19 @@ const authSlice = createSlice({
       if (action.payload.userId) {
         state.userId = action.payload.userId;
       }
-      if (action.payload.email) {
-        state.email = action.payload.email;
+      if (action.payload.lastName) {
+        state.lastName = action.payload.lastName;
       }
-      if (action.payload.name) {
-        state.name = action.payload.name;
+      if (action.payload.firstName) {
+        state.firstName = action.payload.firstName;
       }
     },
     logout: (state) => {
       state.accessToken = null;
       state.refreshToken = null;
       state.userId = null;
-      state.email = null;
-      state.name = null;
+      state.lastName = null;
+      state.firstName = null;
     },
   },
 });

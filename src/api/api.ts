@@ -44,14 +44,14 @@ export const apiSlice = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: API_URL,
     prepareHeaders: (headers, { getState }) => {
-      const token = (getState() as RootState).auth.accessToken;
+      const token = (getState() as RootState).auth.accessToken as any;
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);
-        console.log("token", token);
       }
       return headers;
     },
   }),
+  tagTypes: ["Event", "Profile", "Category", "UserEvents"],
   endpoints: (builder) => ({
     login: builder.mutation<LoginResponse, LoginRequest>({
       query: (credentials) => ({
@@ -67,23 +67,34 @@ export const apiSlice = createApi({
         body: data,
       }),
     }),
-    getEvents: builder.query<any, { categoryId?: any; search?: string }>({
-      query: ({ categoryId, search }) => {
+    getEvents: builder.query<any, any>({
+      query: ({ categoryId, search, radius, userLat, userLng }) => {
+        console.log(categoryId, search, radius, userLat, userLng);
         let url = "/events";
-        const params = [];
-
-        const categoryIdNum = Number(categoryId);
-        if (!isNaN(categoryIdNum) && categoryIdNum > 0) {
-          params.push(`categoryId=${categoryIdNum}`);
+        const params: string[] = [];
+        if (categoryId && categoryId > 0) {
+          params.push(`categoryId=${categoryId}`);
         }
         if (search && search.trim().length > 0) {
           params.push(`search=${encodeURIComponent(search.trim())}`);
+        }
+        if (radius && userLat !== undefined && userLng !== undefined) {
+          params.push(`radius=${radius}`);
+          params.push(`userLat=${userLat}`);
+          params.push(`userLng=${userLng}`);
         }
         if (params.length > 0) {
           url += `?${params.join("&")}`;
         }
         return url;
       },
+      providesTags: (result: any) =>
+        result
+          ? [
+              ...result.map((event: any) => ({ type: "Event", id: event.id })),
+              { type: "Event", id: "LIST" },
+            ]
+          : [{ type: "Event", id: "LIST" }],
     }),
     createEvent: builder.mutation<
       { message: string; eventId: number },
@@ -94,9 +105,15 @@ export const apiSlice = createApi({
         method: "POST",
         body: eventData,
       }),
+      invalidatesTags: () => [
+        { type: "Event", id: "LIST" },
+        { type: "UserEvents", id: "LIST" },
+        { type: "Profile", id: "LIST" },
+      ],
     }),
     getProfile: builder.query<any, void>({
       query: () => "profile",
+      providesTags: () => [{ type: "Profile", id: "LIST" }],
     }),
     refresh: builder.mutation<
       { accessToken: string },
@@ -113,9 +130,20 @@ export const apiSlice = createApi({
         url: `events/${eventId}/join`,
         method: "POST",
       }),
+      invalidatesTags: () => [
+        { type: "Event", id: "LIST" },
+        { type: "UserEvents", id: "LIST" },
+      ],
     }),
     getCategories: builder.query<any, void>({
       query: () => "/categories",
+      providesTags: (result: any) =>
+        result
+          ? [
+              ...result.map((cat: any) => ({ type: "Category", id: cat.id })),
+              { type: "Category", id: "LIST" },
+            ]
+          : [{ type: "Category", id: "LIST" }],
     }),
     updateProfile: builder.mutation<any, FormData>({
       query: (formData) => ({
@@ -123,21 +151,70 @@ export const apiSlice = createApi({
         method: "PUT",
         body: formData,
       }),
+      invalidatesTags: () => [{ type: "Profile", id: "LIST" }],
     }),
     deleteAccount: builder.mutation<void, void>({
       query: () => ({
         url: "/profile",
         method: "DELETE",
       }),
+      invalidatesTags: () => [{ type: "Profile", id: "LIST" }],
     }),
     leaveEvent: builder.mutation<void, number>({
       query: (eventId) => ({
-        url: `events/leave/${eventId}`,
+        url: `events/${eventId}/leave`,
         method: "DELETE",
       }),
+      invalidatesTags: () => [
+        { type: "Event", id: "LIST" },
+        { type: "UserEvents", id: "LIST" },
+      ],
     }),
-    getUserEvents: builder.query<any, any>({
-      query: ({ userId }) => `events/user/${userId}`,
+    getUserEvents: builder.query<any, void>({
+      query: () => `events/user`,
+      providesTags: (result: any) =>
+        result
+          ? [
+              ...result.map((event: any) => ({
+                type: "UserEvents",
+                id: event.id,
+              })),
+              { type: "UserEvents", id: "LIST" },
+            ]
+          : [{ type: "UserEvents", id: "LIST" }],
+    }),
+    updateEvent: builder.mutation<any, { id: number; data: FormData }>({
+      query: ({ id, data }) => ({
+        url: `/events/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+    }),
+    getMyEvents: builder.query<Event[], void>({
+      query: () => "/events/my",
+      providesTags: (result: any) =>
+        result
+          ? [
+              ...result.map((event: any) => ({ type: "Event", id: event.id })),
+              { type: "Event", id: "LIST" },
+            ]
+          : [{ type: "Event", id: "LIST" }],
+    }),
+    getUsers: builder.query<any, any>({
+      query: () => "/profile/users",
+    }),
+    toggleUserBlock: builder.mutation<void, any>({
+      query: ({ userId, blocked }) => ({
+        url: `/profile/users/${userId}/block`,
+        method: "POST",
+        body: { blocked },
+      }),
+    }),
+    deleteEvent: builder.mutation<void, number>({
+      query: (eventId) => ({
+        url: `/events/${eventId}`,
+        method: "DELETE",
+      }),
     }),
   }),
 });
@@ -155,4 +232,9 @@ export const {
   useDeleteAccountMutation,
   useLeaveEventMutation,
   useGetUserEventsQuery,
+  useGetMyEventsQuery,
+  useUpdateEventMutation,
+  useGetUsersQuery,
+  useToggleUserBlockMutation,
+  useDeleteEventMutation,
 } = apiSlice;

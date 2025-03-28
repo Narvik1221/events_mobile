@@ -18,25 +18,16 @@ import {
 } from "../api/api";
 import { useDispatch } from "react-redux";
 import { logout } from "../features/authSlice";
+import { clearUser } from "../features/userSlice";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CustomButton from "../components/CustomButton";
 import CustomModal from "../components/CustomModal"; // Убедитесь, что путь указан правильно
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { useNavigation } from "@react-navigation/native";
+import { getAvatarUri } from "../lib/getAvatarUri";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-
-const getAvatarUri = (avatarPath: string | null) => {
-  if (!avatarPath) return null;
-  if (!avatarPath.startsWith("http://") && avatarPath.includes("uploads")) {
-    const parts = avatarPath.includes("\\")
-      ? avatarPath.split("\\")
-      : avatarPath.split("/");
-    return "http://192.168.1.110:3000/uploads/avatars/" + parts.pop();
-  }
-  return avatarPath;
-};
 
 const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -53,7 +44,7 @@ const ProfileScreen: React.FC = () => {
   const [telegram, setTelegram] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [avatar, setAvatar] = useState<string | null>(null);
-  const [avatarFile, setAvatarFile] = useState<any>(getAvatarUri(data?.avatar));
+  const [avatarFile, setAvatarFile] = useState<any>();
 
   // Состояния для модального окна
   const [modalVisible, setModalVisible] = useState(false);
@@ -69,7 +60,7 @@ const ProfileScreen: React.FC = () => {
       setLastName(data.lastName || "");
       setTelegram(data.telegram || "");
       setWhatsapp(data.whatsapp || "");
-      setAvatar(data.avatar || null);
+      setAvatar(data?.avatar || null);
     }
   }, [data]);
 
@@ -151,6 +142,7 @@ const ProfileScreen: React.FC = () => {
       await AsyncStorage.removeItem("accessToken");
       await AsyncStorage.removeItem("refreshToken");
       dispatch(logout());
+      dispatch(clearUser());
       navigation.navigate("Login");
     } catch (err) {
       console.error("Ошибка выхода:", err);
@@ -199,7 +191,9 @@ const ProfileScreen: React.FC = () => {
       }
     );
   };
-
+  const handleNavigateMyEvents = () => {
+    navigation.navigate("EditEventsScreen");
+  };
   if (isLoading)
     return <ActivityIndicator size="large" style={styles.loader} />;
 
@@ -207,12 +201,18 @@ const ProfileScreen: React.FC = () => {
     <>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Профиль</Text>
-
+        <CustomButton
+          title="Мои мероприятия"
+          onPress={handleNavigateMyEvents}
+        />
         {error ? (
           <Text style={styles.errorText}>Ошибка загрузки профиля</Text>
         ) : (
           <View>
-            {avatar && <Image source={{ uri: avatar }} style={styles.image} />}
+            <Image
+              source={{ uri: getAvatarUri(avatar, false) }}
+              style={styles.image}
+            />
             {Platform.OS !== "web" && (
               <CustomButton title="Выбрать фото" onPress={pickImage} />
             )}

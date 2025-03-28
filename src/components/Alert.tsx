@@ -10,7 +10,7 @@ type AlertProps = {
 
 const Alert: React.FC<AlertProps> = ({ message, type, visible }) => {
   const [show, setShow] = useState(visible);
-  console.log(visible);
+
   useEffect(() => {
     setShow(visible); // Синхронизируем state с пропсом visible
     if (visible) {

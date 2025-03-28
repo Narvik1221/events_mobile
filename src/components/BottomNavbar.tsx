@@ -10,6 +10,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const BottomNavBar = () => {
   const token = useSelector((state: RootState) => state.auth.accessToken);
+  const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
   const navigation = useNavigation<NavigationProp>();
 
   const handleEventsPress = () => {
@@ -27,15 +28,63 @@ const BottomNavBar = () => {
       navigation.navigate("Login");
     }
   };
+  const handleMyEventsPress = () => {
+    if (token) {
+      navigation.navigate("MyEvents");
+    } else {
+      navigation.navigate("Login");
+    }
+  };
 
+  const handleEventsAdminPress = () => {
+    if (token && isAdmin) {
+      navigation.navigate("AdminEvents");
+    } else {
+      navigation.navigate("Login");
+    }
+  };
+
+  const handleUsersAdminPress = () => {
+    if (token && isAdmin) {
+      navigation.navigate("AdminUsers");
+    } else {
+      navigation.navigate("Login");
+    }
+  };
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={handleEventsPress} style={styles.button}>
-        <Text style={styles.buttonText}>Мероприятия</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={handleCreateEventPress} style={styles.button}>
-        <Text style={styles.buttonText}>Создать мероприятие</Text>
-      </TouchableOpacity>
+      {isAdmin ? (
+        <>
+          <TouchableOpacity
+            onPress={handleEventsAdminPress}
+            style={styles.button}
+          >
+            <Text style={styles.buttonText}>Мероприятия</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleUsersAdminPress}
+            style={styles.button}
+          >
+            <Text style={styles.buttonText}>Пользователи</Text>
+          </TouchableOpacity>
+        </>
+      ) : (
+        <>
+          <TouchableOpacity onPress={handleEventsPress} style={styles.button}>
+            <Text style={styles.buttonText}>Мероприятия</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleCreateEventPress}
+            style={styles.button}
+          >
+            <Text style={styles.buttonText}>Создать мероприятие</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleMyEventsPress} style={styles.button}>
+            <Text style={styles.buttonText}>Избранные</Text>
+          </TouchableOpacity>
+        </>
+      )}
+
       <TouchableOpacity onPress={handleProfilePress} style={styles.button}>
         <Text style={styles.buttonText}>Профиль</Text>
       </TouchableOpacity>

@@ -5,6 +5,7 @@ import { useNavigation, NavigationProp } from "@react-navigation/native";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "../features/authSlice";
+import { setUser } from "../features/userSlice";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const AuthChecker: React.FC = () => {
@@ -12,10 +13,6 @@ const AuthChecker: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const dispatch = useDispatch();
 
-  const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [refreshToken, setRefreshToken] = useState<string | null>(null);
-
-  // Загружаем токены перед выполнением запроса
   useEffect(() => {
     const loadTokens = async () => {
       const storedAccessToken = await AsyncStorage.getItem("accessToken");
@@ -28,8 +25,6 @@ const AuthChecker: React.FC = () => {
             refreshToken: storedRefreshToken,
           })
         );
-        setAccessToken(storedAccessToken);
-        setRefreshToken(storedRefreshToken);
       }
 
       setTokensLoaded(true);
@@ -49,6 +44,7 @@ const AuthChecker: React.FC = () => {
         navigation.navigate("Login");
       }
     } else if (data?.accessToken && data?.refreshToken) {
+      // Сохраняем токены
       dispatch(
         setCredentials({
           accessToken: data.accessToken,
@@ -61,7 +57,21 @@ const AuthChecker: React.FC = () => {
       AsyncStorage.setItem("refreshToken", data.refreshToken).catch((err) =>
         console.error("Ошибка сохранения refreshToken:", err)
       );
+
       navigation.navigate("Profile");
+    }
+
+    if (data?.id) {
+      dispatch(
+        setUser({
+          userId: data.id,
+          isAdmin: data.admin,
+        })
+      );
+
+      AsyncStorage.setItem("userId", data.userId).catch((err) =>
+        console.error("Ошибка сохранения userId:", err)
+      );
     }
   }, [error, data, navigation, dispatch]);
 
