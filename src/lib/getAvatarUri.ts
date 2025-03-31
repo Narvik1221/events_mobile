@@ -10,8 +10,8 @@ export const getAvatarUri = (avatarUri: string | null, isEventType = true) => {
   if (!avatarUri) {
     // Если avatar отсутствует, используем defaultImage
     isEventType
-      ? (avatarUri = `${SERVER_URL}${DEFAULT_AVATAR}`)
-      : (avatarUri = `${SERVER_URL}${PROFILE_AVATAR}`);
+      ? (avatarUri = `${DEFAULT_AVATAR}`)
+      : (avatarUri = `${PROFILE_AVATAR}`);
   } else if (
     !avatarUri.startsWith("http://") &&
     avatarUri.includes("uploads")

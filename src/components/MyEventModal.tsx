@@ -55,7 +55,7 @@ const MyEventModal: React.FC<MyEventModalProps> = ({
   };
 
   return (
-    <CustomModal visible={visible} onClose={onClose}>
+    <CustomModal cancelText={"Закрыть"} visible={visible} onClose={onClose}>
       {imageUri ? (
         <Image source={{ uri: imageUri }} style={styles.modalImage} />
       ) : (
@@ -84,7 +84,7 @@ const MyEventModal: React.FC<MyEventModalProps> = ({
         {isDeleting ? (
           <ActivityIndicator color="white" />
         ) : (
-          <Text style={styles.deleteButtonText}>Удалить мероприятие</Text>
+          <Text style={styles.deleteButtonText}>Покинуть мероприятие</Text>
         )}
       </TouchableOpacity>
     </CustomModal>
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
   infoContainer: { width: "100%", marginBottom: 20 },
   infoText: { fontSize: 16, marginBottom: 5 },
   deleteButton: {
-    backgroundColor: "#FF3B30",
+    backgroundColor: "#ff0000",
     padding: 12,
     borderRadius: 5,
     alignItems: "center",

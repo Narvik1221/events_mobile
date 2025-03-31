@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Platform } from "react-native";
 import { WebView } from "react-native-webview";
 import CustomModal from "./CustomModal"; // Проверьте корректность пути импорта
 import { Dimensions } from "react-native";
-
+import * as Location from "expo-location";
 // Ваш API-ключ Yandex Maps
 const API_KEY = "b06fdb53-2726-4de6-8245-aa3ab977de84";
 
@@ -15,7 +15,7 @@ type AddressPickerModalProps = {
   onClose: () => void;
   onSelectLocation: (coords: [number, number]) => void;
 };
-
+const DEFAULT_CENTER = [55.751574, 37.573856]; // Moscow coordinates
 const AddressPickerModal: React.FC<AddressPickerModalProps> = ({
   visible,
   onClose,
@@ -24,6 +24,35 @@ const AddressPickerModal: React.FC<AddressPickerModalProps> = ({
   const [selectedCoords, setSelectedCoords] = useState<[number, number] | null>(
     null
   );
+  const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
+
+  const getUserLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        console.warn("Permission to access location was denied");
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+        timeout: 15000,
+      } as any);
+
+      const { latitude, longitude } = location.coords;
+      if (latitude !== 0 && longitude !== 0) {
+        setMapCenter([latitude, longitude]);
+      } else {
+        console.warn("Received invalid coordinates");
+      }
+    } catch (error) {
+      console.error("Error fetching user location:", error);
+    }
+  };
+
+  useEffect(() => {
+    getUserLocation();
+  }, []);
 
   const htmlContent = `
   <!DOCTYPE html>
@@ -45,10 +74,10 @@ const AddressPickerModal: React.FC<AddressPickerModalProps> = ({
       <div id="map"></div>
       <script>
         ymaps.ready(function () {
-          var myMap = new ymaps.Map("map", {
-              center: [55.751574, 37.573856],
-              zoom: 9
-          });
+        var myMap = new ymaps.Map("map", {
+            center: [${mapCenter[0]}, ${mapCenter[1]}],
+            zoom: 9
+        });
           var myPlacemark;
 
           // При клике на карту устанавливаем метку

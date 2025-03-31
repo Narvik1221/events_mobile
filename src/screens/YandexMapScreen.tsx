@@ -14,32 +14,46 @@ import * as Location from "expo-location";
 import { useGetEventsQuery, useGetCategoriesQuery } from "../api/api";
 import EventModal from "../components/EventModal";
 import { getAvatarUri } from "../lib/getAvatarUri";
+import { useDispatch } from "react-redux";
+import { showAlert } from "../features/alertSlice";
+import CustomButton from "../components/CustomButton";
+import CustomModal from "../components/CustomModal";
 
 const API_KEY = "b06fdb53-2726-4de6-8245-aa3ab977de84";
 const MOSCOW_COORDS = [55.751574, 37.573856];
 
+type EventStatus = any;
+
 const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
+  const dispatch = useDispatch();
   const [search, setSearch] = useState("");
+  // Фильтры вынесены в модальное окно
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  // Состояния для поиска по радиусу
-  const [radius, setRadius] = useState(30); // по умолчанию 30 км
+  // По умолчанию радиус не ограничен
+  const [radius, setRadius] = useState<number | undefined>(undefined);
   const [userLocation, setUserLocation] = useState<{
     lat: number;
     lng: number;
   } | null>(null);
+  // Новый фильтр по статусу мероприятия: "all", "current", "upcoming"
+  const [eventStatus, setEventStatus] = useState<EventStatus>(null);
 
-  const { data: categories } = useGetCategoriesQuery();
-  const {
-    data: events,
-    error,
-    isLoading,
-  } = useGetEventsQuery({
+  // Состояние модального окна для фильтров
+  const [filtersModalVisible, setFiltersModalVisible] = useState(false);
+
+  // Передаём eventStatus только если выбран фильтр отличный от "all"
+  const eventsQueryParams = {
     categoryId: selectedCategory || undefined,
     search: search.trim() ? search.trim() : undefined,
     radius: radius,
     userLat: userLocation?.lat,
     userLng: userLocation?.lng,
-  });
+    eventStatus: eventStatus !== "all" ? eventStatus : undefined,
+  };
+
+  // Получаем данные из API
+  const { data: categories } = useGetCategoriesQuery();
+  const { data: events } = useGetEventsQuery(eventsQueryParams) as any;
 
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
@@ -54,45 +68,66 @@ const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
     setSelectedEvent(null);
   };
 
-  // Функция для получения координат с использованием expo-location
+  // Функция получения координат
   const getUserLocation = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        console.warn("Разрешение на доступ к геолокации не получено");
+        dispatch(
+          showAlert({
+            message: "Разрешение на доступ к геолокации не получено",
+            type: "error",
+          })
+        );
         return;
       }
 
-      // Всегда получаем актуальную позицию
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
         timeout: 15000,
       } as any);
-      console.log("Получены координаты:", location.coords);
+
       if (location && location.coords) {
         const { latitude, longitude } = location.coords;
-        // Если координаты равны 0, считаем их некорректными
         if (latitude === 0 && longitude === 0) {
-          console.warn("Получены некорректные координаты");
+          dispatch(
+            showAlert({
+              message: "Получены некорректные координаты",
+              type: "error",
+            })
+          );
           return;
         }
-        setUserLocation({
-          lat: latitude,
-          lng: longitude,
-        });
+        setUserLocation({ lat: latitude, lng: longitude });
+        dispatch(
+          showAlert({
+            message: "Местоположение успешно определено",
+            type: "success",
+          })
+        );
       } else {
-        console.warn("Не удалось определить координаты");
+        dispatch(
+          showAlert({
+            message: "Не удалось определить координаты",
+            type: "error",
+          })
+        );
       }
     } catch (error) {
-      console.error("Ошибка получения местоположения:", error);
+      dispatch(
+        showAlert({
+          message: `Ошибка получения местоположения: ${(error as any).message}`,
+          type: "error",
+        })
+      );
     }
   };
 
-  // Запрашиваем местоположение при монтировании
   useEffect(() => {
     getUserLocation();
   }, []);
 
+  // Массив маркеров для карты
   const markersData = events
     ? events.map((event: any) => ({
         id: event.id,
@@ -107,17 +142,18 @@ const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
     : [];
 
   const markersJson = JSON.stringify(markersData);
-  // Определяем центр карты: если координаты пользователя доступны и не равны 0, используем их, иначе центр Москвы
   const defaultCenter =
     userLocation && !(userLocation.lat === 0 && userLocation.lng === 0)
       ? `[${userLocation.lat}, ${userLocation.lng}]`
       : `[${MOSCOW_COORDS[0]}, ${MOSCOW_COORDS[1]}]`;
 
+  // HTML-код для карты
   const htmlContent = `
   <!DOCTYPE html>
   <html>
     <head>
       <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
       <title>Yandex Map</title>
       <script src="https://api-maps.yandex.ru/2.1/?apikey=${API_KEY}&lang=ru_RU"></script>
       <style>
@@ -158,7 +194,7 @@ const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
               description: marker.description,
               avatar: marker.avatar,
               id: marker.id,
-              participantsCount: marker.participantsCount
+              participantsCount: marker.participantCount
             }, {
               iconLayout: CustomMarkerLayout,
               iconShape: {
@@ -186,7 +222,7 @@ const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
   </html>
   `;
 
-  // Для веб-версии: слушатель сообщений от iframe
+  // Для веб-версии: слушатель сообщений из iframe
   useEffect(() => {
     if (Platform.OS === "web") {
       const messageHandler = (event: MessageEvent) => {
@@ -207,44 +243,41 @@ const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
     }
   }, []);
 
+  // Активные фильтры: если введён поиск или выбрана категория или установлен радиус
+  const activeFilters =
+    search.trim() !== "" || selectedCategory !== null || radius !== undefined;
+
+  // Функция сброса фильтров (категория, радиус и статус)
+  const resetFilters = () => {
+    setSelectedCategory(null);
+    setRadius(undefined);
+    setEventStatus("all");
+    setFiltersModalVisible(false);
+    setEventStatus(null);
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Мероприятия на карте</Text>
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Поиск мероприятий..."
-        value={search}
-        onChangeText={setSearch}
-      />
-      <View style={styles.filterContainer}>
-        <Text style={styles.filterLabel}>Фильтровать по категории:</Text>
-        <Picker
-          selectedValue={selectedCategory}
-          onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-          style={styles.picker}
+      <View style={styles.searchRow}>
+        {/* Кнопка параметров */}
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            activeFilters && styles.filterButtonActive,
+          ]}
+          onPress={() => setFiltersModalVisible(true)}
         >
-          <Picker.Item label="Все категории" value={null} />
-          {categories?.map((cat: any) => (
-            <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
-          ))}
-        </Picker>
-      </View>
-      <View style={styles.sliderContainer}>
-        <Text style={styles.sliderLabel}>Радиус поиска: {radius} км</Text>
-        <Slider
-          style={{ width: "100%", height: 40 }}
-          minimumValue={1}
-          maximumValue={50}
-          step={1}
-          value={radius}
-          onValueChange={setRadius}
-          minimumTrackTintColor="#007BFF"
-          maximumTrackTintColor="#ccc"
+          <Text style={styles.filterButtonText}>Параметры</Text>
+        </TouchableOpacity>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Поиск меропритий..."
+          value={search}
+          onChangeText={setSearch}
         />
       </View>
-      <TouchableOpacity style={styles.locationButton} onPress={getUserLocation}>
-        <Text style={styles.locationButtonText}>Обновить местоположение</Text>
-      </TouchableOpacity>
+
       <View style={styles.mapContainer}>
         {Platform.OS === "web" ? (
           <iframe
@@ -278,36 +311,172 @@ const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
           onClose={closeModal}
         />
       )}
+      {/* Модальное окно для фильтров с кнопкой "Сбросить" */}
+      <CustomModal
+        visible={filtersModalVisible}
+        onClose={() => setFiltersModalVisible(false)}
+        onConfirm={resetFilters}
+        title="Фильтры"
+        confirmText="Сбросить"
+        cancelText="Продолжить"
+      >
+        <View style={styles.modalContent}>
+          <Text style={styles.modalLabel}>Категория:</Text>
+          <Picker
+            selectedValue={selectedCategory}
+            onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+            style={styles.picker}
+          >
+            <Picker.Item label="Все категории" value={null} />
+            {categories?.map((cat: any) => (
+              <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
+            ))}
+          </Picker>
+          <Text style={styles.modalLabel}>
+            Радиус поиска: {radius || "Не ограничен"} км
+          </Text>
+          <Slider
+            style={{ width: "100%", height: 40 }}
+            minimumValue={1}
+            maximumValue={50}
+            step={1}
+            value={radius}
+            onValueChange={setRadius}
+            minimumTrackTintColor="#fdc63b"
+            maximumTrackTintColor="#cad3e5"
+          />
+          {/* Панель фильтра по статусу мероприятия */}
+          <Text style={[styles.modalLabel, { marginTop: 10 }]}>
+            Статус мероприятия:
+          </Text>
+          <View style={styles.statusPanel}>
+            <TouchableOpacity
+              style={[
+                styles.statusButton,
+                eventStatus === null && styles.statusButtonActive,
+              ]}
+              onPress={() => setEventStatus(null)}
+            >
+              <Text
+                style={[
+                  styles.statusButtonText,
+                  eventStatus === null && styles.statusButtonTextActive,
+                ]}
+              >
+                Все
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.statusButton,
+                eventStatus === "current" && styles.statusButtonActive,
+              ]}
+              onPress={() => setEventStatus("current")}
+            >
+              <Text
+                style={[
+                  styles.statusButtonText,
+                  eventStatus === "current" && styles.statusButtonTextActive,
+                ]}
+              >
+                Текущие
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.statusButton,
+                eventStatus === "upcoming" && styles.statusButtonActive,
+              ]}
+              onPress={() => setEventStatus("upcoming")}
+            >
+              <Text
+                style={[
+                  styles.statusButtonText,
+                  eventStatus === "upcoming" && styles.statusButtonTextActive,
+                ]}
+              >
+                Предстоящие
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <CustomButton
+            title="Обновить местоположение"
+            onPress={getUserLocation}
+          />
+        </View>
+      </CustomModal>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10 },
-  title: { fontSize: 24, textAlign: "center", marginVertical: 10 },
-  searchInput: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 8,
-    borderRadius: 5,
+  container: { flex: 1, paddingTop: 24 },
+  title: { fontSize: 24, textAlign: "center", padding: 10 },
+  searchRow: {
+    padding: 10,
+    flexDirection: "row",
+    alignItems: "stretch",
     marginBottom: 10,
   },
-  filterContainer: { marginBottom: 10 },
-  filterLabel: { fontSize: 16, marginBottom: 5 },
-  picker: { height: 50, width: "100%" },
-  sliderContainer: { marginVertical: 10 },
-  sliderLabel: { fontSize: 16, marginBottom: 5, textAlign: "center" },
+  filterButton: {
+    padding: 10,
+    backgroundColor: "#cad3e5",
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  filterButtonActive: {
+    backgroundColor: "#fdc63b",
+  },
+  filterButtonText: {
+    color: "white",
+    fontSize: 16,
+  },
+  searchInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#cad3e5",
+    padding: 8,
+    borderRadius: 5,
+  },
   locationButton: {
-    backgroundColor: "#007BFF",
+    backgroundColor: "#fdc63b",
     padding: 10,
     borderRadius: 5,
     marginBottom: 10,
     alignSelf: "center",
   },
-  locationButtonText: { color: "#fff", fontSize: 16 },
+  locationButtonText: { color: "#3c3c3c", fontSize: 16 },
   mapContainer: { flex: 1 },
   webview: { flex: 1 },
   iframe: { width: "100%", height: "100%" },
+  modalContent: { width: "100%" },
+  modalLabel: { fontSize: 16, paddingVertical: 8, marginBottom: 5 },
+  picker: { height: 50, width: "100%" },
+  // Стили для панели статуса
+  statusPanel: {
+    flexDirection: "row",
+
+    marginVertical: 10,
+  },
+  statusButton: {
+    fontWeight: "bold",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginRight: 20,
+    borderRadius: 5,
+    backgroundColor: "#cad3e5",
+  },
+  statusButtonActive: {
+    backgroundColor: "#fdc63b",
+  },
+  statusButtonText: {
+    color: "#3c3c3c",
+    fontSize: 16,
+  },
+  statusButtonTextActive: {
+    color: "white",
+    fontWeight: "bold",
+  },
 });
 
 export default YandexMapScreen;

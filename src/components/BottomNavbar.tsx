@@ -1,10 +1,18 @@
 import React from "react";
-import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
+import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { useSelector } from "react-redux";
 import { RootState } from "../store/store";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useNavigationState } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
+
+// Импорт SVG-иконок как компонентов
+import EventsIcon from "../../assets/events.svg";
+import CreateEventIcon from "../../assets/create.svg";
+import FavoritesIcon from "../../assets/heart.svg";
+import ProfileIcon from "../../assets/profile.svg";
+import AdminEventsIcon from "../../assets/events.svg";
+import AdminUsersIcon from "../../assets/users.svg";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -13,80 +21,86 @@ const BottomNavBar = () => {
   const isAdmin = useSelector((state: RootState) => state.user.isAdmin);
   const navigation = useNavigation<NavigationProp>();
 
-  const handleEventsPress = () => {
-    navigation.navigate("Events");
+  // Получаем текущий маршрут из навигационного состояния
+  const currentRouteName = useNavigationState((state) => {
+    if (state && state.routes && state.routes[state.index]) {
+      return state.routes[state.index].name;
+    }
+    return "";
+  });
+
+  // Значение по умолчанию соответствует initialRouteName, установленному в навигаторе
+  const defaultRoute = isAdmin ? "AdminEvents" : "Events";
+  const activeRouteName = currentRouteName || defaultRoute;
+
+  const getIconColor = (routeName: string) => {
+    return activeRouteName === routeName ? "#fdc63b" : "#3c3c3c";
   };
 
-  const handleCreateEventPress = () => {
-    navigation.navigate("CreateEvent");
+  const handleNavigation = (routeName: keyof RootStackParamList) => {
+    navigation.navigate(routeName);
   };
 
-  const handleProfilePress = () => {
-    if (token) {
-      navigation.navigate("Profile");
-    } else {
-      navigation.navigate("Login");
-    }
-  };
-  const handleMyEventsPress = () => {
-    if (token) {
-      navigation.navigate("MyEvents");
-    } else {
-      navigation.navigate("Login");
-    }
-  };
-
-  const handleEventsAdminPress = () => {
-    if (token && isAdmin) {
-      navigation.navigate("AdminEvents");
-    } else {
-      navigation.navigate("Login");
-    }
-  };
-
-  const handleUsersAdminPress = () => {
-    if (token && isAdmin) {
-      navigation.navigate("AdminUsers");
-    } else {
-      navigation.navigate("Login");
-    }
-  };
   return (
     <View style={styles.container}>
       {isAdmin ? (
         <>
           <TouchableOpacity
-            onPress={handleEventsAdminPress}
+            onPress={() => handleNavigation("AdminEvents")}
             style={styles.button}
           >
-            <Text style={styles.buttonText}>Мероприятия</Text>
+            <AdminEventsIcon
+              width={32}
+              height={32}
+              color={getIconColor("AdminEvents")}
+            />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={handleUsersAdminPress}
+            onPress={() => handleNavigation("AdminUsers")}
             style={styles.button}
           >
-            <Text style={styles.buttonText}>Пользователи</Text>
+            <AdminUsersIcon
+              width={32}
+              height={32}
+              color={getIconColor("AdminUsers")}
+            />
           </TouchableOpacity>
         </>
       ) : (
         <>
-          <TouchableOpacity onPress={handleEventsPress} style={styles.button}>
-            <Text style={styles.buttonText}>Мероприятия</Text>
-          </TouchableOpacity>
           <TouchableOpacity
-            onPress={handleCreateEventPress}
+            onPress={() => handleNavigation("Events")}
             style={styles.button}
           >
-            <Text style={styles.buttonText}>Создать мероприятие</Text>
+            <EventsIcon width={32} height={32} color={getIconColor("Events")} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleMyEventsPress} style={styles.button}>
-            <Text style={styles.buttonText}>Избранные</Text>
+          <TouchableOpacity
+            onPress={() => handleNavigation("CreateEvent")}
+            style={styles.button}
+          >
+            <CreateEventIcon
+              width={32}
+              height={32}
+              color={getIconColor("CreateEvent")}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleNavigation("MyEvents")}
+            style={styles.button}
+          >
+            <FavoritesIcon
+              width={32}
+              height={32}
+              color={getIconColor("MyEvents")}
+            />
           </TouchableOpacity>
         </>
       )}
-
-      <TouchableOpacity onPress={handleProfilePress} style={styles.button}>
-        <Text style={styles.buttonText}>Профиль</Text>
+      <TouchableOpacity
+        onPress={() => handleNavigation(token ? "Profile" : "Login")}
+        style={styles.button}
+      >
+        <ProfileIcon width={32} height={32} color={getIconColor("Profile")} />
       </TouchableOpacity>
     </View>
   );
@@ -96,7 +110,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     borderTopWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#cad3e5",
     backgroundColor: "#fff",
     justifyContent: "space-around",
     paddingVertical: 10,
@@ -104,9 +118,6 @@ const styles = StyleSheet.create({
   button: {
     alignItems: "center",
     flex: 1,
-  },
-  buttonText: {
-    fontSize: 16,
   },
 });
 

@@ -9,6 +9,8 @@ import {
   Image,
   Alert,
 } from "react-native";
+import { showAlert } from "../features/alertSlice";
+
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
@@ -16,10 +18,13 @@ import * as FileSystem from "expo-file-system";
 import CustomButton from "../components/CustomButton";
 import { useCreateEventMutation, useGetCategoriesQuery } from "../api/api";
 import AddressPickerModal from "../components/AddressPickerModal"; // путь к модальному окну
+import { useDispatch } from "react-redux";
 
 type Props = any;
 
 const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
+  const dispatch = useDispatch();
+
   const [name, setName] = useState("");
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
@@ -122,8 +127,20 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
     try {
       const response = await createEvent(formData).unwrap();
       console.log("✅ Ответ сервера:", response);
-      navigation.navigate("Home");
+      dispatch(
+        showAlert({
+          message: `Мероприятие успешно создано!`,
+          type: "success",
+        })
+      );
+      navigation.navigate("Events");
     } catch (err) {
+      dispatch(
+        showAlert({
+          message: `Ошибка создания мероприятия: ${err}`,
+          type: "success",
+        })
+      );
       console.error("❌ Ошибка создания мероприятия:", err);
     }
   };
@@ -180,7 +197,12 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
         />
       )}
 
-      {/* Вместо ввода координат – кнопка для выбора адреса */}
+      <TextInput
+        style={styles.input}
+        placeholder="Описание"
+        value={description}
+        onChangeText={setDescription}
+      />
       <CustomButton
         title={latitude && longitude ? "Адрес указан" : "Указать адрес"}
         onPress={() => setAddressModalVisible(true)}
@@ -190,14 +212,6 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
           Выбранные координаты: {latitude}, {longitude}
         </Text>
       )}
-
-      <TextInput
-        style={styles.input}
-        placeholder="Описание"
-        value={description}
-        onChangeText={setDescription}
-      />
-
       <Text style={styles.label}>Выберите категорию для добавления:</Text>
       {categoriesLoading ? (
         <Text>Загрузка категорий...</Text>
@@ -231,9 +245,9 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
               style={styles.categoryTag}
               onPress={() => removeCategory(catId)}
             >
-              <Text style={styles.categoryText}>
-                {cat ? cat.name : catId} ×
-              </Text>
+              <Text style={styles.categoryText}>{`${
+                cat ? cat.name : catId
+              } ×`}</Text>
             </TouchableOpacity>
           );
         })}
@@ -247,7 +261,7 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
       {avatar && <Image source={{ uri: avatar }} style={styles.image} />}
 
       <CustomButton
-        title="Создать"
+        title={isLoading ? "Загрузка" : "Создать"}
         onPress={handleCreateEvent}
         disabled={isLoading}
       />
@@ -265,7 +279,8 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    padding: 20,
+    padding: 10,
+    paddingVertical: 24,
     justifyContent: "center",
   },
   title: {
@@ -279,20 +294,20 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#cad3e5",
     padding: 10,
     marginBottom: 10,
   },
   picker: {
     height: 50,
     width: "100%",
-    borderColor: "#ccc",
+    borderColor: "#cad3e5",
     borderWidth: 1,
     borderRadius: 5,
     marginBottom: 10,
   },
   button: {
-    backgroundColor: "#007BFF",
+    backgroundColor: "#fdc63b",
     padding: 10,
     marginVertical: 10,
     alignItems: "center",
@@ -302,6 +317,7 @@ const styles = StyleSheet.create({
     height: 100,
     alignSelf: "center",
     marginVertical: 10,
+    borderRadius: 50,
   },
   selectedCategoriesContainer: {
     flexDirection: "row",

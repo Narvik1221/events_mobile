@@ -186,17 +186,6 @@ const EditEventScreen: React.FC<Props> = ({ route, navigation }) => {
           }}
         />
       )}
-
-      <CustomButton
-        title={latitude && longitude ? "Адрес указан" : "Указать адрес"}
-        onPress={() => setAddressModalVisible(true)}
-      />
-      {latitude && longitude && (
-        <Text style={styles.coordsText}>
-          Выбранные координаты: {latitude}, {longitude}
-        </Text>
-      )}
-
       <TextInput
         style={styles.input}
         placeholder="Описание"
@@ -225,22 +214,27 @@ const EditEventScreen: React.FC<Props> = ({ route, navigation }) => {
           ))}
         </Picker>
       )}
-
+      <CustomButton
+        title={latitude && longitude ? "Адрес указан" : "Указать адрес"}
+        onPress={() => setAddressModalVisible(true)}
+      />
+      {latitude && longitude && (
+        <Text style={styles.coordsText}>
+          Выбранные координаты: {latitude}, {longitude}
+        </Text>
+      )}
       <CustomButton title="Добавить категорию" onPress={addCategory} />
 
       <View style={styles.selectedCategoriesContainer}>
         {selectedCategories.map((catId) => {
           const cat = categories?.find((c: any) => c.id === catId);
           return (
-            <TouchableOpacity
+            <CustomButton
               key={catId}
               style={styles.categoryTag}
               onPress={() => removeCategory(catId)}
-            >
-              <Text style={styles.categoryText}>
-                {cat ? cat.name : catId} ×
-              </Text>
-            </TouchableOpacity>
+              title={`${cat ? cat.name : catId} ×`}
+            ></CustomButton>
           );
         })}
       </View>
@@ -268,25 +262,41 @@ const EditEventScreen: React.FC<Props> = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, padding: 20, justifyContent: "center" },
+  container: {
+    flexGrow: 1,
+    padding: 10,
+    paddingVertical: 24,
+    justifyContent: "center",
+  },
   title: { fontSize: 24, marginBottom: 20, textAlign: "center" },
   label: { fontSize: 16, marginBottom: 5 },
-  input: { borderWidth: 1, borderColor: "#ccc", padding: 10, marginBottom: 10 },
+  input: {
+    borderWidth: 1,
+    borderColor: "#cad3e5",
+    padding: 10,
+    marginBottom: 10,
+  },
   picker: {
     height: 50,
     width: "100%",
-    borderColor: "#ccc",
+    borderColor: "#cad3e5",
     borderWidth: 1,
     borderRadius: 5,
     marginBottom: 10,
   },
   button: {
-    backgroundColor: "#007BFF",
+    backgroundColor: "#fdc63b",
     padding: 10,
     marginVertical: 10,
     alignItems: "center",
   },
-  image: { width: 100, height: 100, alignSelf: "center", marginVertical: 10 },
+  image: {
+    width: 100,
+    height: 100,
+    alignSelf: "center",
+    marginVertical: 10,
+    borderRadius: 50,
+  },
   selectedCategoriesContainer: {
     flexDirection: "row",
     flexWrap: "wrap",

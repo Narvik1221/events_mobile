@@ -11,15 +11,10 @@ type Props = {
 };
 
 const ScreenContainer: React.FC<Props> = ({ children }) => {
-  const alertState = useSelector((state: RootState) => state.alert);
-
   return (
     <View style={styles.container}>
-      <Alert
-        message={alertState.message}
-        type={alertState.type}
-        visible={alertState.visible}
-      />
+      <Alert />
+
       <View style={styles.content}>{children}</View>
       <BottomNavBar />
     </View>
@@ -28,6 +23,7 @@ const ScreenContainer: React.FC<Props> = ({ children }) => {
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: "#f5f7f9",
     flex: 1,
   },
   content: {

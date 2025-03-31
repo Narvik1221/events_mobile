@@ -18,19 +18,19 @@ import {
 } from "../api/api";
 import EventModal from "../components/EventModal";
 import MyEventModal from "../components/MyEventModal";
+import { getAvatarUri } from "../lib/getAvatarUri";
+import CustomButton from "../components/CustomButton";
 
 type EventType = {
   id: number;
   name: string;
   description: string;
-  avatar?: string;
+  avatar?: any;
   participantsCount: number;
   categories?: { id: number; name: string }[];
 };
 
 const MyEventsScreen: React.FC = () => {
-  const userId = useSelector((state: RootState) => state.user.userId);
-
   const {
     data: events,
     error,
@@ -66,31 +66,25 @@ const MyEventsScreen: React.FC = () => {
   };
 
   const renderItem = ({ item }: { item: EventType }) => {
-    let avatarUri = item.avatar;
-    if (
-      avatarUri &&
-      !avatarUri.startsWith("http://") &&
-      avatarUri.includes("uploads")
-    ) {
-      const parts = avatarUri.includes("\\")
-        ? avatarUri.split("\\")
-        : avatarUri.split("/");
-      avatarUri = "http://192.168.1.110:3000/uploads/events/" + parts.pop();
-    }
-
     return (
-      <TouchableOpacity
-        style={styles.item}
-        onPress={() => openModal({ ...item, avatar: avatarUri })}
-      >
-        {avatarUri ? (
-          <Image source={{ uri: avatarUri }} style={styles.avatar} />
-        ) : null}
+      <View style={styles.item}>
+        <Image
+          source={{ uri: getAvatarUri(item?.avatar) }}
+          style={styles.avatar}
+        />
+
         <View style={styles.textContainer}>
           <Text style={styles.eventName}>{item.name}</Text>
           <Text>{item.description}</Text>
         </View>
-      </TouchableOpacity>
+        <CustomButton
+          style={styles.btn}
+          onPress={() =>
+            openModal({ ...item, avatar: getAvatarUri(item?.avatar) })
+          }
+          title="Подробнее"
+        />
+      </View>
     );
   };
 
@@ -124,11 +118,11 @@ const MyEventsScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
+  container: { flex: 1, padding: 10, paddingVertical: 24 },
   title: { fontSize: 24, marginBottom: 20, textAlign: "center" },
   searchInput: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#cad3e5",
     padding: 10,
     marginBottom: 10,
     borderRadius: 5,
@@ -138,7 +132,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 15,
     borderBottomWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#cad3e5",
   },
   avatar: {
     width: 50,
@@ -146,16 +140,19 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     marginRight: 10,
   },
-  textContainer: { flex: 1 },
+  textContainer: { flex: 1, minWidth: 100 },
   eventName: { fontSize: 18, fontWeight: "bold" },
   filterContainer: { marginBottom: 20 },
   filterLabel: { fontSize: 16, marginBottom: 5 },
   picker: {
     height: 50,
     width: "100%",
-    borderColor: "#ccc",
+    borderColor: "#cad3e5",
     borderWidth: 1,
     borderRadius: 5,
+  },
+  btn: {
+    width: 130,
   },
 });
 

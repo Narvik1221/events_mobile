@@ -18,6 +18,7 @@ import EditEventsScreen from "../screens/EditEventsScreen";
 import EditEventScreen from "../screens/EditEventScreen";
 import AdminEventsScreen from "../screens/AdminEventsScreen";
 import AdminUsersScreen from "../screens/AdminUsersScreen";
+import EventParticipantsScreen from "../screens/EventParticipantsScreen";
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -29,6 +30,7 @@ export type RootStackParamList = {
   EditEventScreen: any;
   AdminUsers: undefined;
   AdminEvents: undefined;
+  EventParticipantsScreen: any;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -65,7 +67,6 @@ const AppNavigator = () => {
           initialRouteName={initialRoute}
           screenOptions={{ headerShown: false }}
         >
-          {/* <Stack.Screen name="Events" component={EventsScreen} /> */}
           <Stack.Screen name="EditEventsScreen" component={EditEventsScreen} />
           <Stack.Screen name="EditEventScreen" component={EditEventScreen} />
           <Stack.Screen name="Events" component={YandexMapScreen} />
@@ -76,6 +77,10 @@ const AppNavigator = () => {
           <Stack.Screen name="MyEvents" component={MyEventsScreen} />
           <Stack.Screen name="AdminEvents" component={AdminEventsScreen} />
           <Stack.Screen name="AdminUsers" component={AdminUsersScreen} />
+          <Stack.Screen
+            name="EventParticipantsScreen"
+            component={EventParticipantsScreen}
+          />
         </Stack.Navigator>
       </ScreenContainer>
     </NavigationContainer>

@@ -99,16 +99,26 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 20 },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 10,
+    paddingVertical: 24,
+  },
   title: { fontSize: 24, marginBottom: 20, textAlign: "center" },
-  input: { borderWidth: 1, borderColor: "#ccc", padding: 10, marginBottom: 10 },
+  input: {
+    borderWidth: 1,
+    borderColor: "#cad3e5",
+    padding: 10,
+    marginBottom: 10,
+  },
   button: {
-    backgroundColor: "#007BFF",
+    backgroundColor: "#fdc63b",
     padding: 10,
     marginBottom: 10,
     alignItems: "center",
   },
-  buttonText: { color: "#fff", fontSize: 16 },
+  buttonText: { color: "#3c3c3c", fontSize: 16 },
   link: { color: "blue", marginTop: 15, textAlign: "center" },
   error: { color: "red", marginTop: 10, textAlign: "center" },
   image: { width: 100, height: 100, alignSelf: "center", marginVertical: 10 },

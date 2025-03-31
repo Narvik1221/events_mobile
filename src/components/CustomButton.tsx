@@ -11,21 +11,21 @@ type ButtonType = "default" | "logout";
 interface CustomButtonProps extends TouchableOpacityProps {
   title: string;
   type?: ButtonType;
+  isSmall?: boolean;
 }
 
 const CustomButton: React.FC<CustomButtonProps> = ({
   title,
   type = "default",
+  isSmall = false,
   style,
   ...props
 }) => {
+  const typeStyles =
+    type === "logout" ? styles.logoutButton : styles.defaultButton;
   return (
     <TouchableOpacity
-      style={[
-        styles.button,
-        type === "logout" ? styles.logoutButton : styles.defaultButton,
-        style,
-      ]}
+      style={[styles.button, typeStyles, isSmall && styles.small, style]}
       {...props}
     >
       <Text
@@ -44,31 +44,35 @@ const CustomButton: React.FC<CustomButtonProps> = ({
 
 const styles = StyleSheet.create({
   button: {
-    width: 300,
+    width: "100%",
     maxWidth: 300,
     marginLeft: "auto",
     marginRight: "auto",
     paddingVertical: 12,
-    paddingHorizontal: 20,
+    paddingHorizontal: 12,
     borderRadius: 4,
     alignItems: "center",
     marginVertical: 5,
   },
+  small: {
+    width: undefined,
+    alignSelf: "flex-start",
+  },
   defaultButton: {
-    backgroundColor: "#007BFF",
+    backgroundColor: "#fdc63b",
   },
   logoutButton: {
-    backgroundColor: "#dc3545",
+    backgroundColor: "#ff0000",
   },
   buttonText: {
+    fontWeight: "bold",
     fontSize: 16,
   },
   defaultButtonText: {
-    color: "#fff",
+    color: "#3c3c3c",
   },
   logoutButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
+    color: "white",
   },
 });
 

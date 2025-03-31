@@ -13,7 +13,6 @@ const ErrorBoundary: React.FC<Props> = ({ children }) => {
     setError(null); // Сбрасываем ошибку
   };
 
-  // Обработка ошибок через глобальный обработчик ошибок React
   React.useEffect(() => {
     const handleGlobalError = (error: Error) => {
       setError(error);
@@ -33,16 +32,6 @@ const ErrorBoundary: React.FC<Props> = ({ children }) => {
           padding: 16,
         }}
       >
-        <Text
-          style={{
-            fontSize: 20,
-            color: "red",
-            textAlign: "center",
-            marginBottom: 16,
-          }}
-        >
-          Произошла ошибка: {error.message || "Неизвестная ошибка"}.
-        </Text>
         <CustomButton title="Попробовать снова" onPress={resetError} />
       </View>
     );

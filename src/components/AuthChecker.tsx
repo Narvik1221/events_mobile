@@ -68,10 +68,10 @@ const AuthChecker: React.FC = () => {
           isAdmin: data.admin,
         })
       );
-
-      AsyncStorage.setItem("userId", data.userId).catch((err) =>
-        console.error("Ошибка сохранения userId:", err)
-      );
+      // console.log("data.id", data.id);
+      // AsyncStorage.setItem("userId", data.id).catch((err) =>
+      //   console.error("Ошибка сохранения userId:", err)
+      // );
     }
   }, [error, data, navigation, dispatch]);
 

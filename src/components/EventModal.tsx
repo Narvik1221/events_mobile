@@ -1,4 +1,3 @@
-// components/EventModal.tsx
 import React from "react";
 import {
   View,
@@ -12,14 +11,13 @@ import CustomModal from "./CustomModal";
 import { useDispatch } from "react-redux";
 import { showAlert } from "../features/alertSlice";
 import { useJoinEventMutation } from "../api/api";
-
+import { RootStackParamList } from "../navigation/AppNavigator";
+import { useNavigation, NavigationProp } from "@react-navigation/native";
 type EventModalProps = {
   visible: boolean;
   onClose: () => void;
   event?: any;
-
   imageUri?: string | null;
-  isJoining?: boolean;
 };
 
 const EventModal: React.FC<EventModalProps> = ({
@@ -27,11 +25,12 @@ const EventModal: React.FC<EventModalProps> = ({
   onClose,
   event,
 
-  isJoining,
   imageUri,
 }) => {
   const dispatch = useDispatch();
-  const [joinEvent] = useJoinEventMutation();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const [joinEvent, { error, isLoading }] = useJoinEventMutation();
+
   const onJoinHandle = async (eventId: number) => {
     try {
       await joinEvent(eventId).unwrap();
@@ -60,31 +59,57 @@ const EventModal: React.FC<EventModalProps> = ({
       ) : (
         <Text style={styles.noImageText}>Нет изображения</Text>
       )}
-
-      <Text style={styles.modalTitle}>{event?.name}</Text>
-      <View style={styles.infoContainer}>
-        <Text style={styles.infoText}>
-          Дата начала: {new Date(event?.startDate).toLocaleString()}
-        </Text>
-        <Text style={styles.infoText}>
-          Дата окончания: {new Date(event?.endDate).toLocaleString()}
-        </Text>
-        <Text style={styles.infoText}>Описание: {event?.description}</Text>
-        <Text style={styles.infoText}>
-          Участников: {event?.participantCount || 0}
-        </Text>
-      </View>
+      {event && (
+        <>
+          <Text style={styles.modalTitle}>{event?.name}</Text>
+          <View style={styles.infoContainer}>
+            <Text style={styles.infoText}>
+              Дата начала: {new Date(event?.startDate).toLocaleString()}
+            </Text>
+            <Text style={styles.infoText}>
+              Дата окончания: {new Date(event?.endDate).toLocaleString()}
+            </Text>
+            <Text style={styles.infoText}>Описание: {event?.description}</Text>
+            <Text style={styles.infoText}>
+              Участников: {event?.participantsCount || 0}
+            </Text>
+          </View>
+        </>
+      )}
 
       <TouchableOpacity
         style={styles.joinButton}
         onPress={() => onJoinHandle(event?.id)}
-        disabled={isJoining}
+        disabled={isLoading}
       >
-        {isJoining ? (
+        {isLoading ? (
           <ActivityIndicator color="white" />
         ) : (
-          <Text style={styles.joinButtonText}>Записаться</Text>
+          <Text style={styles.joinButtonText}>{}Записаться</Text>
         )}
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.participantsButton}
+        onPress={() => {
+          onClose();
+          navigation.navigate("EventParticipantsScreen", {
+            eventId: event?.id,
+          });
+        }}
+      >
+        <Text style={styles.participantsButtonText}>Участники</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.participantsButton}
+        onPress={() => {
+          onClose();
+          navigation.navigate("EventParticipantsScreen", {
+            eventId: event?.id,
+          });
+        }}
+      >
+        <Text style={styles.participantsButtonText}>Организатор</Text>
       </TouchableOpacity>
     </CustomModal>
   );
@@ -119,7 +144,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   joinButton: {
-    backgroundColor: "#007BFF",
+    backgroundColor: "#fdc63b",
     padding: 12,
     borderRadius: 5,
     alignItems: "center",
@@ -127,6 +152,19 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   joinButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  participantsButton: {
+    backgroundColor: "#fdc63b",
+    padding: 12,
+    borderRadius: 5,
+    alignItems: "center",
+    width: "100%",
+    marginBottom: 10,
+  },
+  participantsButtonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "bold",

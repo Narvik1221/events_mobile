@@ -26,6 +26,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import { useNavigation } from "@react-navigation/native";
 import { getAvatarUri } from "../lib/getAvatarUri";
+import { showAlert } from "../features/alertSlice";
+import ProfileImage from "../../assets/defaultProfile.svg";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -113,6 +115,25 @@ const ProfileScreen: React.FC = () => {
   };
 
   const handleUpdateProfile = async () => {
+    // Если данные профиля не изменились, выводим сообщение в консоль и не отправляем запрос
+    if (
+      data &&
+      firstName === (data.firstName || "") &&
+      lastName === (data.lastName || "") &&
+      telegram === (data.telegram || "") &&
+      whatsapp === (data.whatsapp || "") &&
+      !avatarFile
+    ) {
+      dispatch(
+        showAlert({
+          message: "Поля профиля не изменены. Обновление не требуется.",
+          type: "error",
+        })
+      );
+
+      return;
+    }
+
     const formData = new FormData();
     formData.append("firstName", firstName);
     formData.append("lastName", lastName);
@@ -125,15 +146,21 @@ const ProfileScreen: React.FC = () => {
 
     try {
       await updateProfile(formData).unwrap();
-      setModalMessage("Профиль обновлен!");
-      setModalType("success");
-      setModalVisible(true);
+      dispatch(
+        showAlert({
+          message: "Профиль успешно обновлен",
+          type: "success",
+        })
+      );
       refetch();
     } catch (err) {
+      dispatch(
+        showAlert({
+          message: "Ошибка обновления профиля",
+          type: "error",
+        })
+      );
       console.error("Ошибка обновления профиля:", err);
-      setModalMessage("Не удалось обновить профиль.");
-      setModalType("error");
-      setModalVisible(true);
     }
   };
 
@@ -179,21 +206,30 @@ const ProfileScreen: React.FC = () => {
           setConfirmAction(null);
           setShowCloseButton(false);
           setConfirmText("Продолжить");
-          showModal("Аккаунт успешно удален.", "success", () => {
-            navigation.navigate("Login");
-            setModalVisible(false);
-          });
+          dispatch(
+            showAlert({
+              message: "Аккаунт успешно удален",
+              type: "success",
+            })
+          );
         } catch (err) {
           console.error("Ошибка удаления аккаунта:", err);
           setModalVisible(false);
-          showModal("Не удалось удалить аккаунт.", "error");
+          dispatch(
+            showAlert({
+              message: "Не удалось удалить аккаунт",
+              type: "error",
+            })
+          );
         }
       }
     );
   };
+
   const handleNavigateMyEvents = () => {
     navigation.navigate("EditEventsScreen");
   };
+
   if (isLoading)
     return <ActivityIndicator size="large" style={styles.loader} />;
 
@@ -201,18 +237,24 @@ const ProfileScreen: React.FC = () => {
     <>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Профиль</Text>
-        <CustomButton
-          title="Мои мероприятия"
-          onPress={handleNavigateMyEvents}
-        />
+
         {error ? (
           <Text style={styles.errorText}>Ошибка загрузки профиля</Text>
         ) : (
           <View>
-            <Image
-              source={{ uri: getAvatarUri(avatar, false) }}
-              style={styles.image}
-            />
+            {avatar ? (
+              <Image
+                source={{ uri: getAvatarUri(avatar, false) }}
+                style={styles.image}
+              />
+            ) : (
+              <ProfileImage
+                style={styles.image}
+                color={"#3c3c3c"}
+                width={100}
+                height={100}
+              />
+            )}
             {Platform.OS !== "web" && (
               <CustomButton title="Выбрать фото" onPress={pickImage} />
             )}
@@ -243,16 +285,25 @@ const ProfileScreen: React.FC = () => {
             />
 
             <CustomButton
-              title="Обновить профиль"
+              title={updating ? "загрузка" : "Обновить профиль"}
               onPress={handleUpdateProfile}
               disabled={updating}
             />
-            <CustomButton title="Выйти" onPress={handleLogout} />
+
+            <CustomButton
+              title="Мои мероприятия"
+              onPress={handleNavigateMyEvents}
+            />
+            <CustomButton
+              style={styles.logout}
+              title="Выйти"
+              onPress={handleLogout}
+            />
             <CustomButton
               title="Удалить аккаунт"
               onPress={handleDeleteAccount}
               disabled={deleting}
-              style={styles.deleteButton}
+              type="logout"
             />
           </View>
         )}
@@ -273,9 +324,19 @@ const ProfileScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, padding: 20, justifyContent: "center" },
+  container: {
+    flexGrow: 1,
+    padding: 10,
+    paddingVertical: 24,
+    justifyContent: "center",
+  },
   title: { fontSize: 24, marginBottom: 20, textAlign: "center" },
-  input: { borderWidth: 1, borderColor: "#ccc", padding: 10, marginBottom: 10 },
+  input: {
+    borderWidth: 1,
+    borderColor: "#cad3e5",
+    padding: 10,
+    marginBottom: 10,
+  },
   image: {
     width: 100,
     height: 100,
@@ -283,9 +344,12 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     borderRadius: 50,
   },
-  deleteButton: { backgroundColor: "red", marginTop: 20 },
+  deleteButton: { backgroundColor: "red", marginTop: 20, color: "white" },
   loader: { flex: 1, justifyContent: "center" },
   errorText: { color: "red", textAlign: "center", marginVertical: 10 },
+  logout: {
+    marginTop: 24,
+  },
 });
 
 export default ProfileScreen;

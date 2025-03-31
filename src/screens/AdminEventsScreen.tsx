@@ -1,4 +1,3 @@
-// screens/EventsScreen.tsx
 import React, { useState } from "react";
 import {
   View,
@@ -20,6 +19,7 @@ import {
 import EventModal from "../components/EventModal";
 import CustomModal from "../components/CustomModal";
 import { getAvatarUri } from "../lib/getAvatarUri";
+import CustomButton from "../components/CustomButton";
 
 type EventType = {
   id: number;
@@ -36,9 +36,11 @@ type CategoryType = {
 };
 
 const EventsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  // Состояния для поиска и фильтрации по категории
+  // Состояния для поиска и фильтрации
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  // Состояние модального окна для фильтров
+  const [filtersModalVisible, setFiltersModalVisible] = useState(false);
 
   // Запросы через RTK Query
   const { data: categories } = useGetCategoriesQuery();
@@ -52,6 +54,7 @@ const EventsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     search: search.trim() ? search.trim() : undefined,
   });
 
+  // Состояния для модального окна просмотра события
   const [selectedEvent, setSelectedEvent] = useState<EventType | null>(null);
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -65,7 +68,7 @@ const EventsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
   const openModal = (event: EventType) => {
     setSelectedEvent(event);
-    setImageUri(event.avatar || null);
+    setImageUri(event.avatar ? getAvatarUri(event.avatar) : null);
     setModalVisible(true);
   };
 
@@ -108,15 +111,16 @@ const EventsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         />
         <View style={styles.textContainer}>
           <Text style={styles.eventName}>{item.name}</Text>
-          <Text>{item.description}</Text>
+          <Text numberOfLines={2} style={styles.eventDescription}>
+            {item.description}
+          </Text>
         </View>
       </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.deleteButton}
+      <CustomButton
+        type="logout"
         onPress={() => confirmDeleteEvent(item)}
-      >
-        <Text style={styles.deleteButtonText}>Удалить</Text>
-      </TouchableOpacity>
+        title="Удалить"
+      ></CustomButton>
     </View>
   );
 
@@ -132,24 +136,11 @@ const EventsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         onChangeText={setSearch}
       />
 
-      {/* Фильтр по категориям */}
-      <View style={styles.filterContainer}>
-        <Text style={styles.filterLabel}>Фильтровать по категории:</Text>
-        <Picker
-          selectedValue={selectedCategory}
-          onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-          style={styles.picker}
-        >
-          <Picker.Item label="Все категории" value={null} />
-          {categories?.map((category: CategoryType) => (
-            <Picker.Item
-              key={category.id}
-              label={category.name}
-              value={category.id}
-            />
-          ))}
-        </Picker>
-      </View>
+      {/* Кнопка открытия модального окна с фильтрами */}
+      <CustomButton
+        title="Параметры фильтра"
+        onPress={() => setFiltersModalVisible(true)}
+      ></CustomButton>
 
       {isLoading ? (
         <Text>Загрузка...</Text>
@@ -184,6 +175,34 @@ const EventsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           confirmText="Удалить"
         />
       )}
+
+      {/* Модальное окно для фильтров */}
+      <CustomModal
+        visible={filtersModalVisible}
+        onClose={() => setFiltersModalVisible(false)}
+        onConfirm={() => setFiltersModalVisible(false)}
+        title="Фильтры"
+        confirmText="Применить"
+        cancelText="Отмена"
+      >
+        <View style={styles.modalContent}>
+          <Text style={styles.modalLabel}>Категория:</Text>
+          <Picker
+            selectedValue={selectedCategory}
+            onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+            style={styles.picker}
+          >
+            <Picker.Item label="Все категории" value={null} />
+            {categories?.map((category: CategoryType) => (
+              <Picker.Item
+                key={category.id}
+                label={category.name}
+                value={category.id}
+              />
+            ))}
+          </Picker>
+        </View>
+      </CustomModal>
     </View>
   );
 };
@@ -198,18 +217,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 5,
   },
-  filterContainer: { marginBottom: 20 },
-  filterLabel: { fontSize: 16, marginBottom: 5 },
-  picker: {
-    height: 50,
-    width: "100%",
-    borderColor: "#ccc",
-    borderWidth: 1,
+  filterButton: {
+    backgroundColor: "#fdc63b",
+    padding: 10,
     borderRadius: 5,
-  },
-  eventItem: {
+    alignItems: "center",
     marginBottom: 10,
   },
+  filterButtonText: {
+    color: "#3c3c3c",
+    fontSize: 16,
+  },
+  eventItem: { marginBottom: 10 },
   item: {
     flexDirection: "row",
     alignItems: "center",
@@ -225,17 +244,20 @@ const styles = StyleSheet.create({
   },
   textContainer: { flex: 1 },
   eventName: { fontSize: 18, fontWeight: "bold" },
+  eventDescription: { fontSize: 14, color: "#555" },
   deleteButton: {
-    backgroundColor: "#dc3545",
-    padding: 10,
-    borderRadius: 5,
-    alignItems: "center",
-    marginTop: 5,
+    backgroundColor: "#ff0000",
   },
   deleteButtonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  modalContent: { width: "100%" },
+  modalLabel: { fontSize: 16, marginBottom: 5 },
+  picker: {
+    height: 50,
+    width: "100%",
   },
 });
 

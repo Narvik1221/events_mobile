@@ -1,18 +1,12 @@
 import React from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-} from "react-native";
+import { View, Text, FlatList, StyleSheet, Image } from "react-native";
 import { useGetMyEventsQuery } from "../api/api";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import Constants from "expo-constants";
 import { getAvatarUri } from "../lib/getAvatarUri";
+import CustomButton from "../components/CustomButton";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -41,7 +35,7 @@ const EditEventsScreen: React.FC = () => {
       <View style={styles.item}>
         <Image
           source={{ uri: getAvatarUri(item.avatar) }}
-          style={styles.image}
+          style={styles.avatar}
         />
 
         <View style={styles.textContainer}>
@@ -53,14 +47,14 @@ const EditEventsScreen: React.FC = () => {
           </Text>
         </View>
 
-        <TouchableOpacity
-          style={styles.button}
+        <CustomButton
+          style={styles.small}
+          isSmall
+          title="Изменить"
           onPress={() =>
             navigation.navigate("EditEventScreen", { event: item })
           }
-        >
-          <Text style={styles.buttonText}>Редактировать</Text>
-        </TouchableOpacity>
+        ></CustomButton>
       </View>
     );
   };
@@ -77,36 +71,24 @@ const EditEventsScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10 },
+  container: { flex: 1, padding: 10, paddingVertical: 24 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  // item: {
-  //   padding: 10,
-  //   marginBottom: 10,
-  //   backgroundColor: "#f2f2f2",
-  //   borderRadius: 5,
-  // },
-  image: {
-    width: 100,
-    height: 100,
-    borderRadius: 5,
-    marginBottom: 10,
-    alignSelf: "center",
-  },
+
   title: { fontSize: 18, fontWeight: "bold", marginBottom: 5 },
   button: {
-    backgroundColor: "#007BFF",
+    backgroundColor: "#fdc63b",
     padding: 10,
     borderRadius: 5,
     marginTop: 5,
     alignSelf: "flex-start",
   },
-  buttonText: { color: "#fff" },
+  buttonText: { color: "#3c3c3c" },
   item: {
     flexDirection: "row",
     alignItems: "center",
     padding: 15,
     borderBottomWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#cad3e5",
   },
   avatar: {
     width: 50,
@@ -114,7 +96,8 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     marginRight: 10,
   },
-  textContainer: { flex: 1 },
+  small: { maxWidth: 130 },
+  textContainer: { flex: 1, minWidth: 100 },
   eventName: { fontSize: 18, fontWeight: "bold" },
 });
 

@@ -49,8 +49,8 @@ const CustomModal: React.FC<CustomModalProps> = ({
               </TouchableOpacity>
             )}
             {showCloseButton && (
-              <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                <Text style={styles.closeButtonText}>{cancelText}</Text>
+              <TouchableOpacity style={styles.confirmButton} onPress={onClose}>
+                <Text style={styles.confirmButtonText}>{cancelText}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -84,24 +84,24 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: "row",
     marginTop: 15,
-    justifyContent: "space-around",
+    justifyContent: "space-between",
     width: "100%",
   },
   confirmButton: {
     padding: 10,
-    backgroundColor: "#007BFF",
+    backgroundColor: "#fdc63b",
     borderRadius: 5,
   },
   confirmButtonText: {
     fontSize: 16,
-    color: "white",
+    color: "#3c3c3cs",
   },
   closeButton: { padding: 10 },
-  closeButtonText: { fontSize: 16, color: "#007BFF" },
+  closeButtonText: { fontSize: 16, color: "#3c3c3cs" },
 
   defaultModal: { backgroundColor: "white" },
-  errorModal: { backgroundColor: "#ffcccc" },
-  successModal: { backgroundColor: "#ccffcc" },
+  errorModal: {},
+  successModal: {},
 });
 
 export default CustomModal;

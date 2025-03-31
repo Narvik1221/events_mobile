@@ -1,27 +1,25 @@
-// components/Alert.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "../store/store";
+import { hideAlert } from "../features/alertSlice";
 
-type AlertProps = {
-  message: string;
-  type: "success" | "error";
-  visible: boolean;
-};
-
-const Alert: React.FC<AlertProps> = ({ message, type, visible }) => {
-  const [show, setShow] = useState(visible);
+const Alert: React.FC = () => {
+  const dispatch = useDispatch();
+  const { message, type, visible } = useSelector(
+    (state: RootState) => state.alert
+  );
 
   useEffect(() => {
-    setShow(visible); // Синхронизируем state с пропсом visible
     if (visible) {
       const timer = setTimeout(() => {
-        setShow(false);
-      }, 3000); // Скрываем Alert через 3 секунды
+        dispatch(hideAlert());
+      }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [visible]);
+  }, [visible, dispatch]);
 
-  if (!show) return null;
+  if (!visible) return null;
 
   return (
     <View
@@ -43,17 +41,17 @@ const styles = StyleSheet.create({
     right: "10%",
     padding: 15,
     borderRadius: 5,
-    zIndex: 1,
+    zIndex: 1000,
     alignItems: "center",
   },
   success: {
-    backgroundColor: "#28a745",
+    backgroundColor: "#1b7c46",
   },
   error: {
-    backgroundColor: "#dc3545",
+    backgroundColor: "#ff0000",
   },
   alertText: {
-    color: "white",
+    color: "#ffffff",
     fontSize: 16,
     fontWeight: "bold",
   },

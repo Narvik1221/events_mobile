@@ -1,17 +1,15 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-} from "react-native";
+import { View, Text, FlatList, StyleSheet, Alert } from "react-native";
 import { useGetUsersQuery, useToggleUserBlockMutation } from "../api/api";
 import CustomButton from "../components/CustomButton";
 
 const AdminEventsScreen: React.FC = () => {
-  const { data: users, error, isLoading, refetch } = useGetUsersQuery(null);
+  const {
+    data: users,
+    error,
+    isLoading,
+    refetch,
+  } = useGetUsersQuery(null as any);
   const [toggleUserBlock, { isLoading: isToggling }] =
     useToggleUserBlockMutation();
 
@@ -46,11 +44,12 @@ const AdminEventsScreen: React.FC = () => {
               {item.blocked ? "Заблокирован" : "Активен"}
             </Text>
             <CustomButton
+              type="logout"
               title={item.blocked ? "Разблокировать" : "Заблокировать"}
               onPress={() => handleToggleBlock(item.id, item.blocked)}
               disabled={isToggling}
               style={{
-                backgroundColor: item.blocked ? "#28a745" : "#dc3545",
+                backgroundColor: item.blocked ? "#1b7c46" : "#ff0000",
               }}
             />
           </View>
@@ -63,7 +62,8 @@ const AdminEventsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    padding: 10,
+    paddingVertical: 24,
   },
   title: {
     fontSize: 24,
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   userCard: {
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
+    borderBottomColor: "#cad3e5",
     marginBottom: 10,
   },
   userText: {

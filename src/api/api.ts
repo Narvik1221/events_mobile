@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type { RootState } from "../store/store";
+import Constants from "expo-constants";
 
 interface LoginRequest {
   firstName: string;
@@ -37,12 +38,28 @@ export interface Event {
   avatar?: string;
 }
 
-const API_URL = "http://192.168.1.110:3000/api/";
+export interface Participant {
+  id: number;
+  firstName: string;
+  lastName: string;
+  telegram: string;
+  whatsapp: string;
+  avatar: string | null;
+  registrationDate: string;
+  blocked: boolean;
+  admin: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const SERVER_URL =
+  Constants.expoConfig?.extra?.SERVER_URL || "http://192.168.1.110:3000/api/";
+//const SERVER_URL = "http://192.168.1.110:3000/api/";
 
 export const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({
-    baseUrl: API_URL,
+    baseUrl: SERVER_URL,
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as RootState).auth.accessToken as any;
       if (token) {
@@ -51,7 +68,8 @@ export const apiSlice = createApi({
       return headers;
     },
   }),
-  tagTypes: ["Event", "Profile", "Category", "UserEvents"],
+  // Добавляем новый тег для участников мероприятия
+  tagTypes: ["Event", "Profile", "Category", "UserEvents", "EventParticipants"],
   endpoints: (builder) => ({
     login: builder.mutation<LoginResponse, LoginRequest>({
       query: (credentials) => ({
@@ -67,9 +85,26 @@ export const apiSlice = createApi({
         body: data,
       }),
     }),
-    getEvents: builder.query<any, any>({
-      query: ({ categoryId, search, radius, userLat, userLng }) => {
-        console.log(categoryId, search, radius, userLat, userLng);
+    getEvents: builder.query<
+      any,
+      {
+        categoryId?: number | null;
+        search?: string;
+        radius?: number;
+        userLat?: number;
+        userLng?: number;
+        eventStatus?: "current" | "upcoming";
+      }
+    >({
+      query: ({
+        categoryId,
+        search,
+        radius,
+        userLat,
+        userLng,
+        eventStatus,
+      }) => {
+        console.log(categoryId, search, radius, userLat, userLng, eventStatus);
         let url = "/events";
         const params: string[] = [];
         if (categoryId && categoryId > 0) {
@@ -83,18 +118,14 @@ export const apiSlice = createApi({
           params.push(`userLat=${userLat}`);
           params.push(`userLng=${userLng}`);
         }
+        if (eventStatus) {
+          params.push(`eventStatus=${eventStatus}`);
+        }
         if (params.length > 0) {
           url += `?${params.join("&")}`;
         }
         return url;
       },
-      providesTags: (result: any) =>
-        result
-          ? [
-              ...result.map((event: any) => ({ type: "Event", id: event.id })),
-              { type: "Event", id: "LIST" },
-            ]
-          : [{ type: "Event", id: "LIST" }],
     }),
     createEvent: builder.mutation<
       { message: string; eventId: number },
@@ -130,9 +161,10 @@ export const apiSlice = createApi({
         url: `events/${eventId}/join`,
         method: "POST",
       }),
-      invalidatesTags: () => [
+      invalidatesTags: (result, error, eventId) => [
         { type: "Event", id: "LIST" },
         { type: "UserEvents", id: "LIST" },
+        { type: "EventParticipants", id: eventId },
       ],
     }),
     getCategories: builder.query<any, void>({
@@ -165,13 +197,14 @@ export const apiSlice = createApi({
         url: `events/${eventId}/leave`,
         method: "DELETE",
       }),
-      invalidatesTags: () => [
+      invalidatesTags: (result, error, eventId) => [
         { type: "Event", id: "LIST" },
         { type: "UserEvents", id: "LIST" },
+        { type: "EventParticipants", id: eventId },
       ],
     }),
     getUserEvents: builder.query<any, void>({
-      query: () => `events/user`,
+      query: () => "events/user",
       providesTags: (result: any) =>
         result
           ? [
@@ -191,7 +224,7 @@ export const apiSlice = createApi({
       }),
     }),
     getMyEvents: builder.query<Event[], void>({
-      query: () => "/events/my",
+      query: () => "events/my",
       providesTags: (result: any) =>
         result
           ? [
@@ -200,12 +233,12 @@ export const apiSlice = createApi({
             ]
           : [{ type: "Event", id: "LIST" }],
     }),
-    getUsers: builder.query<any, any>({
-      query: () => "/profile/users",
+    getUsers: builder.query<any, void>({
+      query: () => "profile/users",
     }),
     toggleUserBlock: builder.mutation<void, any>({
       query: ({ userId, blocked }) => ({
-        url: `/profile/users/${userId}/block`,
+        url: `profile/users/${userId}/block`,
         method: "POST",
         body: { blocked },
       }),
@@ -215,6 +248,12 @@ export const apiSlice = createApi({
         url: `/events/${eventId}`,
         method: "DELETE",
       }),
+    }),
+    getEventParticipants: builder.query<any, number>({
+      query: (eventId) => `profile/${eventId}/participants`,
+      providesTags: (result, error, eventId) => [
+        { type: "EventParticipants", id: eventId },
+      ],
     }),
   }),
 });
@@ -237,4 +276,5 @@ export const {
   useGetUsersQuery,
   useToggleUserBlockMutation,
   useDeleteEventMutation,
+  useGetEventParticipantsQuery,
 } = apiSlice;
