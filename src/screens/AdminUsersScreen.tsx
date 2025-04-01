@@ -49,7 +49,7 @@ const AdminEventsScreen: React.FC = () => {
               onPress={() => handleToggleBlock(item.id, item.blocked)}
               disabled={isToggling}
               style={{
-                backgroundColor: item.blocked ? "#1b7c46" : "#ff0000",
+                backgroundColor: item.blocked ? "#1b7c46" : "#d9534f",
               }}
             />
           </View>

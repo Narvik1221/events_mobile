@@ -33,22 +33,23 @@ const EditEventsScreen: React.FC = () => {
   const renderItem = ({ item }: { item: any }) => {
     return (
       <View style={styles.item}>
-        <Image
-          source={{ uri: getAvatarUri(item.avatar) }}
-          style={styles.avatar}
-        />
+        <View style={styles.itemTop}>
+          <Image
+            source={{ uri: getAvatarUri(item.avatar) }}
+            style={styles.avatar}
+          />
 
-        <View style={styles.textContainer}>
-          <Text style={styles.title}>{item.name}</Text>
-          <Text>{item.description}</Text>
-          <Text>
-            {new Date(item.startDate).toLocaleDateString()} –{" "}
-            {new Date(item.endDate).toLocaleDateString()}
-          </Text>
+          <View style={styles.textContainer}>
+            <Text style={styles.title}>{item.name}</Text>
+            <Text>{item.description}</Text>
+            <Text>
+              {new Date(item.startDate).toLocaleDateString()} –{" "}
+              {new Date(item.endDate).toLocaleDateString()}
+            </Text>
+          </View>
         </View>
-
         <CustomButton
-          style={styles.small}
+          style={styles.change}
           isSmall
           title="Изменить"
           onPress={() =>
@@ -61,6 +62,7 @@ const EditEventsScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.titleTop}>Мои мероприятия</Text>
       <FlatList
         data={events}
         keyExtractor={(item) => item.id.toString()}
@@ -73,7 +75,7 @@ const EditEventsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 10, paddingVertical: 24 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-
+  titleTop: { fontSize: 24, marginBottom: 20, textAlign: "center" },
   title: { fontSize: 18, fontWeight: "bold", marginBottom: 5 },
   button: {
     backgroundColor: "#fdc63b",
@@ -84,19 +86,24 @@ const styles = StyleSheet.create({
   },
   buttonText: { color: "#3c3c3c" },
   item: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: "column",
+
     padding: 15,
     borderBottomWidth: 1,
     borderColor: "#cad3e5",
   },
+  itemTop: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingVertical: 15,
+  },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     marginRight: 10,
   },
-  small: { maxWidth: 130 },
+  change: { marginLeft: 0 },
   textContainer: { flex: 1, minWidth: 100 },
   eventName: { fontSize: 18, fontWeight: "bold" },
 });

@@ -84,7 +84,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 
       {avatar && <Image source={{ uri: avatar }} style={styles.image} />}
       <CustomButton
-        title="Зарегистрироваться"
+        title={isLoading ? "Загрузка" : "Зарегистрироваться"}
         onPress={handleRegister}
         disabled={isLoading}
       />
@@ -107,6 +107,7 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 24, marginBottom: 20, textAlign: "center" },
   input: {
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: "#cad3e5",
     padding: 10,

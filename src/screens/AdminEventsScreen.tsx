@@ -187,20 +187,22 @@ const EventsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       >
         <View style={styles.modalContent}>
           <Text style={styles.modalLabel}>Категория:</Text>
-          <Picker
-            selectedValue={selectedCategory}
-            onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-            style={styles.picker}
-          >
-            <Picker.Item label="Все категории" value={null} />
-            {categories?.map((category: CategoryType) => (
-              <Picker.Item
-                key={category.id}
-                label={category.name}
-                value={category.id}
-              />
-            ))}
-          </Picker>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={selectedCategory}
+              onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+              style={styles.picker}
+            >
+              <Picker.Item label="Все категории" value={null} />
+              {categories?.map((category: CategoryType) => (
+                <Picker.Item
+                  key={category.id}
+                  label={category.name}
+                  value={category.id}
+                />
+              ))}
+            </Picker>
+          </View>
         </View>
       </CustomModal>
     </View>
@@ -246,15 +248,22 @@ const styles = StyleSheet.create({
   eventName: { fontSize: 18, fontWeight: "bold" },
   eventDescription: { fontSize: 14, color: "#555" },
   deleteButton: {
-    backgroundColor: "#ff0000",
+    backgroundColor: "#d9534f",
   },
   deleteButtonText: {
-    color: "white",
+    color: "#3c3c3c",
     fontSize: 16,
     fontWeight: "bold",
   },
   modalContent: { width: "100%" },
   modalLabel: { fontSize: 16, marginBottom: 5 },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: "#cad3e5",
+    borderRadius: 5,
+    overflow: "hidden",
+    marginBottom: 10,
+  },
   picker: {
     height: 50,
     width: "100%",

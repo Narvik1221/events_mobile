@@ -166,58 +166,65 @@ const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
         .custom-marker {
           background-size: cover;
           border-radius: 50%;
-          border: 0.5px solid #000;
+          border: 1px solid #3c3c3c;
         }
       </style>
     </head>
     <body>
       <div id="map"></div>
-      <script>
-        ymaps.ready(function () {
-          var markerSize = Math.min(window.innerWidth, window.innerHeight) * 0.05;
-          var markers = ${markersJson};
-          var defaultCenter = ${defaultCenter};
-          var myMap = new ymaps.Map("map", {
-              center: defaultCenter,
-              zoom: 9
-          }, {
-              searchControlProvider: "yandex#search"
-          });
-          
-          var CustomMarkerLayout = ymaps.templateLayoutFactory.createClass(
-            '<div class="custom-marker" style="width: ' + markerSize + 'px; height: ' + markerSize + 'px; background-image: url({{ properties.avatar }})"></div>'
-          );
-          
-          markers.forEach(function(marker) {
-            var placemark = new ymaps.Placemark(marker.coordinates, {
-              name: marker.name,
-              description: marker.description,
-              avatar: marker.avatar,
-              id: marker.id,
-              participantsCount: marker.participantCount
-            }, {
-              iconLayout: CustomMarkerLayout,
-              iconShape: {
-                type: "Circle",
-                coordinates: [markerSize / 2, markerSize / 2],
-                radius: markerSize / 2
-              }
-            });
-            
-            placemark.events.add("click", function () {
-              var message = JSON.stringify(marker);
-              if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
-                window.ReactNativeWebView.postMessage(message);
-              } else if (window.parent && window.parent.postMessage) {
-                window.parent.postMessage(message, "*");
-              } else {
-                console.log("Marker clicked:", marker);
-              }
-            });
-            myMap.geoObjects.add(placemark);
-          });
+        <script>
+      ymaps.ready(function () {
+        // Определяем минимальный размер маркера в пикселях
+        var minMarkerSize = 35;
+        // Рассчитываем размер маркера как 5% от меньшей из сторон окна
+        var calculatedSize = Math.min(window.innerWidth, window.innerHeight) * 0.05;
+        // Устанавливаем окончательный размер маркера: либо рассчитанный, либо минимальный, если рассчитанный меньше
+        var markerSize = Math.max(calculatedSize, minMarkerSize);
+
+        var markers = ${markersJson};
+        var defaultCenter = ${defaultCenter};
+        var myMap = new ymaps.Map("map", {
+            center: defaultCenter,
+            zoom: 9
+        }, {
+            searchControlProvider: "yandex#search"
         });
-      </script>
+        
+        var CustomMarkerLayout = ymaps.templateLayoutFactory.createClass(
+          '<div class="custom-marker" style="width: ' + markerSize + 'px; height: ' + markerSize + 'px; background-image: url({{ properties.avatar }})"></div>'
+        );
+        
+        markers.forEach(function(marker) {
+          var placemark = new ymaps.Placemark(marker.coordinates, {
+            name: marker.name,
+            description: marker.description,
+            avatar: marker.avatar,
+            id: marker.id,
+            participantsCount: marker.participantCount
+          }, {
+            iconLayout: CustomMarkerLayout,
+            iconShape: {
+              type: "Circle",
+              coordinates: [markerSize / 2, markerSize / 2],
+              radius: markerSize / 2
+            }
+          });
+          
+          placemark.events.add("click", function () {
+            var message = JSON.stringify(marker);
+            if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+              window.ReactNativeWebView.postMessage(message);
+            } else if (window.parent && window.parent.postMessage) {
+              window.parent.postMessage(message, "*");
+            } else {
+              console.log("Marker clicked:", marker);
+            }
+          });
+          myMap.geoObjects.add(placemark);
+        });
+      });
+    </script>
+
     </body>
   </html>
   `;
@@ -322,16 +329,18 @@ const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
       >
         <View style={styles.modalContent}>
           <Text style={styles.modalLabel}>Категория:</Text>
-          <Picker
-            selectedValue={selectedCategory}
-            onValueChange={(itemValue) => setSelectedCategory(itemValue)}
-            style={styles.picker}
-          >
-            <Picker.Item label="Все категории" value={null} />
-            {categories?.map((cat: any) => (
-              <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
-            ))}
-          </Picker>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={selectedCategory}
+              onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+              style={styles.picker}
+            >
+              <Picker.Item label="Все категории" value={null} />
+              {categories?.map((cat: any) => (
+                <Picker.Item key={cat.id} label={cat.name} value={cat.id} />
+              ))}
+            </Picker>
+          </View>
           <Text style={styles.modalLabel}>
             Радиус поиска: {radius || "Не ограничен"} км
           </Text>
@@ -428,7 +437,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fdc63b",
   },
   filterButtonText: {
-    color: "white",
+    color: "#3c3c3c",
     fontSize: 16,
   },
   searchInput: {
@@ -451,18 +460,26 @@ const styles = StyleSheet.create({
   iframe: { width: "100%", height: "100%" },
   modalContent: { width: "100%" },
   modalLabel: { fontSize: 16, paddingVertical: 8, marginBottom: 5 },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: "#cad3e5",
+    borderRadius: 5,
+    overflow: "hidden",
+    marginBottom: 10,
+  },
   picker: { height: 50, width: "100%" },
   // Стили для панели статуса
   statusPanel: {
     flexDirection: "row",
-
-    marginVertical: 10,
+    marginTop: 10,
+    flexWrap: "wrap",
   },
   statusButton: {
     fontWeight: "bold",
     paddingVertical: 8,
     paddingHorizontal: 12,
-    marginRight: 20,
+    marginRight: 10,
+    marginBottom: 10,
     borderRadius: 5,
     backgroundColor: "#cad3e5",
   },

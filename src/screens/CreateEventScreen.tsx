@@ -218,20 +218,22 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
       ) : categoriesError ? (
         <Text>Ошибка загрузки категорий.</Text>
       ) : (
-        <Picker
-          selectedValue={pickerValue}
-          onValueChange={(itemValue) => setPickerValue(itemValue)}
-          style={styles.picker}
-        >
-          <Picker.Item label="Выберите категорию" value={null} />
-          {categories.map((category: any) => (
-            <Picker.Item
-              key={category.id}
-              label={category.name}
-              value={category.id}
-            />
-          ))}
-        </Picker>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={pickerValue}
+            onValueChange={(itemValue) => setPickerValue(itemValue)}
+            style={styles.picker}
+          >
+            <Picker.Item label="Выберите категорию" value={null} />
+            {categories.map((category: any) => (
+              <Picker.Item
+                key={category.id}
+                label={category.name}
+                value={category.id}
+              />
+            ))}
+          </Picker>
+        </View>
       )}
 
       <CustomButton title="Добавить категорию" onPress={addCategory} />
@@ -293,9 +295,17 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   input: {
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: "#cad3e5",
     padding: 10,
+    marginBottom: 10,
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: "#cad3e5",
+    borderRadius: 5,
+    overflow: "hidden",
     marginBottom: 10,
   },
   picker: {

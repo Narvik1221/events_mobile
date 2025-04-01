@@ -8,9 +8,6 @@ import {
   Image,
   TextInput,
 } from "react-native";
-import { useSelector } from "react-redux";
-import { RootState } from "../store/store";
-import { Picker } from "@react-native-picker/picker";
 import {
   useGetUserEventsQuery,
   useGetCategoriesQuery,
@@ -68,17 +65,20 @@ const MyEventsScreen: React.FC = () => {
   const renderItem = ({ item }: { item: EventType }) => {
     return (
       <View style={styles.item}>
-        <Image
-          source={{ uri: getAvatarUri(item?.avatar) }}
-          style={styles.avatar}
-        />
+        <View style={styles.itemTop}>
+          <Image
+            source={{ uri: getAvatarUri(item?.avatar) }}
+            style={styles.avatar}
+          />
 
-        <View style={styles.textContainer}>
-          <Text style={styles.eventName}>{item.name}</Text>
-          <Text>{item.description}</Text>
+          <View style={styles.textContainer}>
+            <Text style={styles.eventName}>{item.name}</Text>
+            <Text>{item.description}</Text>
+          </View>
         </View>
         <CustomButton
-          style={styles.btn}
+          style={styles.change}
+          isSmall
           onPress={() =>
             openModal({ ...item, avatar: getAvatarUri(item?.avatar) })
           }
@@ -90,7 +90,7 @@ const MyEventsScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Мои мероприятия</Text>
+      <Text style={styles.title}>Избранное</Text>
 
       {isLoading ? (
         <Text>Загрузка...</Text>
@@ -128,29 +128,29 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   item: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: "column",
+
     padding: 15,
     borderBottomWidth: 1,
     borderColor: "#cad3e5",
   },
+  itemTop: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingVertical: 15,
+  },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     marginRight: 10,
   },
+  change: { marginLeft: 0 },
   textContainer: { flex: 1, minWidth: 100 },
   eventName: { fontSize: 18, fontWeight: "bold" },
   filterContainer: { marginBottom: 20 },
   filterLabel: { fontSize: 16, marginBottom: 5 },
-  picker: {
-    height: 50,
-    width: "100%",
-    borderColor: "#cad3e5",
-    borderWidth: 1,
-    borderRadius: 5,
-  },
+
   btn: {
     width: 130,
   },

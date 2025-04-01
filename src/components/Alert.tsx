@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#1b7c46",
   },
   error: {
-    backgroundColor: "#ff0000",
+    backgroundColor: "#d9534f",
   },
   alertText: {
     color: "#ffffff",

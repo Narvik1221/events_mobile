@@ -100,6 +100,7 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 24, marginBottom: 20, textAlign: "center" },
   input: {
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: "#cad3e5",
     padding: 10,

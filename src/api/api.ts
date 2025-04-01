@@ -52,9 +52,8 @@ export interface Participant {
   updatedAt: string;
 }
 
-const SERVER_URL =
-  Constants.expoConfig?.extra?.SERVER_URL || "http://192.168.1.110:3000/api/";
-//const SERVER_URL = "http://192.168.1.110:3000/api/";
+//const SERVER_URL =Constants.expoConfig?.extra?.SERVER_URL || "http://192.168.1.110:3000/api/";
+const SERVER_URL = "http://192.168.1.110:3000/api/";
 
 export const apiSlice = createApi({
   reducerPath: "api",
@@ -192,6 +191,7 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: () => [{ type: "Profile", id: "LIST" }],
     }),
+
     leaveEvent: builder.mutation<void, number>({
       query: (eventId) => ({
         url: `events/${eventId}/leave`,
@@ -250,10 +250,17 @@ export const apiSlice = createApi({
       }),
     }),
     getEventParticipants: builder.query<any, number>({
-      query: (eventId) => `profile/${eventId}/participants`,
+      query: (eventId) => `/profile/${eventId}/participants`,
       providesTags: (result, error, eventId) => [
         { type: "EventParticipants", id: eventId },
       ],
+    }),
+    deleteUserEvent: builder.mutation({
+      query: ({ id }) => ({
+        url: `/events/user/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["UserEvents"],
     }),
   }),
 });
@@ -277,4 +284,5 @@ export const {
   useToggleUserBlockMutation,
   useDeleteEventMutation,
   useGetEventParticipantsQuery,
+  useDeleteUserEventMutation,
 } = apiSlice;

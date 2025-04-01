@@ -114,14 +114,14 @@ const styles = StyleSheet.create({
   infoContainer: { width: "100%", marginBottom: 20 },
   infoText: { fontSize: 16, marginBottom: 5 },
   deleteButton: {
-    backgroundColor: "#ff0000",
+    backgroundColor: "#d9534f",
     padding: 12,
     borderRadius: 5,
     alignItems: "center",
     width: "100%",
     marginBottom: 10,
   },
-  deleteButtonText: { color: "white", fontSize: 16, fontWeight: "bold" },
+  deleteButtonText: { color: "#3c3c3c", fontSize: 16, fontWeight: "bold" },
 });
 
 export default MyEventModal;

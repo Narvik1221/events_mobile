@@ -13,14 +13,28 @@ import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
+import { useDispatch } from "react-redux";
 import CustomButton from "../components/CustomButton";
-import { useUpdateEventMutation, useGetCategoriesQuery } from "../api/api";
+import {
+  useGetCategoriesQuery,
+  useUpdateEventMutation,
+  useDeleteUserEventMutation,
+} from "../api/api";
 import AddressPickerModal from "../components/AddressPickerModal";
+import CustomModal from "../components/CustomModal";
+import { showAlert } from "../features/alertSlice"; // пример импорта экшена
 
 type Props = any;
 
 const EditEventScreen: React.FC<Props> = ({ route, navigation }) => {
   const { event } = route.params;
+  const dispatch = useDispatch();
+
+  // Инициализируем выбранные категории из event.categories (если они есть) или из event.categoryIds
+  const initialSelectedCategories = event.categories
+    ? event.categories.map((cat: any) => cat.id)
+    : event.categoryIds || [];
+
   // Инициализируем поля данными из выбранного мероприятия
   const [name, setName] = useState(event.name);
   const [startDate, setStartDate] = useState(new Date(event.startDate));
@@ -33,23 +47,32 @@ const EditEventScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const [pickerValue, setPickerValue] = useState<number | null>(null);
   const [selectedCategories, setSelectedCategories] = useState<number[]>(
-    event.categoryIds || []
+    initialSelectedCategories
   );
-
+  const [confirmText, setConfirmText] = useState<any>(null);
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [showCloseButton, setShowCloseButton] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalType, setModalType] = useState<"success" | "error" | "confirm">(
+    "confirm"
+  );
+  const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
 
   const {
     data: categories,
     error: categoriesError,
     isLoading: categoriesLoading,
   } = useGetCategoriesQuery();
-  const [updateEvent, { error, isLoading }] = useUpdateEventMutation();
+
+  const [updateEvent, { isLoading: isUpdating }] = useUpdateEventMutation();
+  const [deleteEvent, { isLoading: isDeleting }] = useDeleteUserEventMutation();
 
   // Состояние для модального окна выбора адреса
   const [addressModalVisible, setAddressModalVisible] = useState(false);
 
-  // Функция выбора изображения (аналогична CreateEventScreen)
+  // Функция выбора изображения
   const pickImage = async () => {
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -129,10 +152,53 @@ const EditEventScreen: React.FC<Props> = ({ route, navigation }) => {
         data: formData,
       }).unwrap();
       console.log("Ответ сервера:", response);
-      navigation.navigate("EditEventsScreen");
+      navigation.navigate("MyEventsScreen");
     } catch (err) {
       console.error("Ошибка обновления мероприятия:", err);
     }
+  };
+
+  // Функция для показа модального окна с подтверждением
+  const showModal = (
+    message: string,
+    type: "error" | "success" | "confirm",
+    onConfirm?: () => void
+  ) => {
+    setModalMessage(message);
+    setModalType(type);
+    setConfirmAction(() => onConfirm || null);
+    setModalVisible(true);
+  };
+
+  const handleDeleteEvent = async () => {
+    showModal(
+      "Вы уверены, что хотите удалить мероприятие? Это действие нельзя отменить!",
+      "confirm",
+      async () => {
+        try {
+          await deleteEvent({ id: event.id }).unwrap();
+          setModalVisible(false);
+          setConfirmAction(null);
+          setShowCloseButton(false);
+          setConfirmText("Продолжить");
+          dispatch(
+            showAlert({
+              message: "Мероприятие успешно удалено",
+              type: "success",
+            })
+          );
+        } catch (err) {
+          console.error("Ошибка удаления мероприятия:", err);
+          setModalVisible(false);
+          dispatch(
+            showAlert({
+              message: "Не удалось удалить мероприятие",
+              type: "error",
+            })
+          );
+        }
+      }
+    );
   };
 
   // Callback из AddressPickerModal – устанавливаем выбранные координаты
@@ -186,6 +252,7 @@ const EditEventScreen: React.FC<Props> = ({ route, navigation }) => {
           }}
         />
       )}
+
       <TextInput
         style={styles.input}
         placeholder="Описание"
@@ -199,21 +266,41 @@ const EditEventScreen: React.FC<Props> = ({ route, navigation }) => {
       ) : categoriesError ? (
         <Text>Ошибка загрузки категорий.</Text>
       ) : (
-        <Picker
-          selectedValue={pickerValue}
-          onValueChange={(itemValue) => setPickerValue(itemValue)}
-          style={styles.picker}
-        >
-          <Picker.Item label="Выберите категорию" value={null} />
-          {categories.map((category: any) => (
-            <Picker.Item
-              key={category.id}
-              label={category.name}
-              value={category.id}
-            />
-          ))}
-        </Picker>
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={pickerValue}
+            onValueChange={(itemValue) => setPickerValue(itemValue)}
+            style={styles.picker}
+          >
+            <Picker.Item label="Выберите категорию" value={null} />
+            {categories.map((category: any) => (
+              <Picker.Item
+                key={category.id}
+                label={category.name}
+                value={category.id}
+              />
+            ))}
+          </Picker>
+        </View>
       )}
+      <CustomButton title="Добавить категорию" onPress={addCategory} />
+      <View style={styles.selectedCategoriesContainer}>
+        {selectedCategories.map((catId) => {
+          const cat = categories?.find((c: any) => c.id === catId);
+          return (
+            <TouchableOpacity
+              key={catId}
+              style={styles.categoryTag}
+              onPress={() => removeCategory(catId)}
+            >
+              <Text style={styles.categoryText}>
+                {`${cat ? cat.name : catId} ×`}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
       <CustomButton
         title={latitude && longitude ? "Адрес указан" : "Указать адрес"}
         onPress={() => setAddressModalVisible(true)}
@@ -223,21 +310,6 @@ const EditEventScreen: React.FC<Props> = ({ route, navigation }) => {
           Выбранные координаты: {latitude}, {longitude}
         </Text>
       )}
-      <CustomButton title="Добавить категорию" onPress={addCategory} />
-
-      <View style={styles.selectedCategoriesContainer}>
-        {selectedCategories.map((catId) => {
-          const cat = categories?.find((c: any) => c.id === catId);
-          return (
-            <CustomButton
-              key={catId}
-              style={styles.categoryTag}
-              onPress={() => removeCategory(catId)}
-              title={`${cat ? cat.name : catId} ×`}
-            ></CustomButton>
-          );
-        })}
-      </View>
 
       <CustomButton
         title="Выбрать фото"
@@ -247,15 +319,39 @@ const EditEventScreen: React.FC<Props> = ({ route, navigation }) => {
       {avatar && <Image source={{ uri: avatar }} style={styles.image} />}
 
       <CustomButton
-        title="Обновить"
+        title={isUpdating ? "Загрузка" : "Обновить"}
         onPress={handleUpdateEvent}
-        disabled={isLoading}
+        disabled={isUpdating}
+      />
+
+      <CustomButton
+        title={isDeleting ? "Удаляется..." : "Удалить мероприятие"}
+        onPress={handleDeleteEvent}
+        style={styles.deleteButton}
       />
 
       <AddressPickerModal
         visible={addressModalVisible}
         onClose={() => setAddressModalVisible(false)}
         onSelectLocation={handleSelectLocation}
+        initialCoordinates={
+          latitude && longitude
+            ? {
+                latitude: parseFloat(latitude),
+                longitude: parseFloat(longitude),
+              }
+            : undefined
+        }
+      />
+
+      <CustomModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        title={modalMessage}
+        type={modalType}
+        showCloseButton={showCloseButton}
+        onConfirm={confirmAction || undefined}
+        confirmText={confirmText || undefined}
       />
     </ScrollView>
   );
@@ -268,24 +364,40 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     justifyContent: "center",
   },
-  title: { fontSize: 24, marginBottom: 20, textAlign: "center" },
-  label: { fontSize: 16, marginBottom: 5 },
+  title: {
+    fontSize: 24,
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 5,
+  },
   input: {
     borderWidth: 1,
     borderColor: "#cad3e5",
     padding: 10,
     marginBottom: 10,
   },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: "#cad3e5",
+    borderRadius: 5,
+    overflow: "hidden",
+    marginBottom: 10,
+  },
   picker: {
     height: 50,
     width: "100%",
-    borderColor: "#cad3e5",
-    borderWidth: 1,
-    borderRadius: 5,
-    marginBottom: 10,
   },
   button: {
     backgroundColor: "#fdc63b",
+    padding: 10,
+    marginVertical: 10,
+    alignItems: "center",
+  },
+  deleteButton: {
+    backgroundColor: "#d9534f",
     padding: 10,
     marginVertical: 10,
     alignItems: "center",
@@ -300,18 +412,25 @@ const styles = StyleSheet.create({
   selectedCategoriesContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginBottom: 10,
+    justifyContent: "flex-start",
+    marginVertical: 10,
+    gap: 10,
   },
   categoryTag: {
     backgroundColor: "#ddd",
     borderRadius: 15,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    marginRight: 5,
-    marginBottom: 5,
   },
-  categoryText: { fontSize: 14, color: "#333" },
-  coordsText: { textAlign: "center", marginBottom: 10, fontWeight: "bold" },
+  categoryText: {
+    fontSize: 14,
+    color: "#333",
+  },
+  coordsText: {
+    textAlign: "center",
+    marginBottom: 10,
+    fontWeight: "bold",
+  },
 });
 
 export default EditEventScreen;

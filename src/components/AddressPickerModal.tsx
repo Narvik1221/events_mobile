@@ -1,30 +1,50 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { View, Text, StyleSheet, Platform } from "react-native";
 import { WebView } from "react-native-webview";
 import CustomModal from "./CustomModal"; // Проверьте корректность пути импорта
 import { Dimensions } from "react-native";
 import * as Location from "expo-location";
+
 // Ваш API-ключ Yandex Maps
 const API_KEY = "b06fdb53-2726-4de6-8245-aa3ab977de84";
 
 // Определяем высоту для карты (для web и native)
 const MAP_HEIGHT = 300;
 
+// Добавляем пропс initialCoordinates для предварительной установки метки
 type AddressPickerModalProps = {
   visible: boolean;
   onClose: () => void;
   onSelectLocation: (coords: [number, number]) => void;
+  initialCoordinates?: { latitude: number; longitude: number };
 };
-const DEFAULT_CENTER = [55.751574, 37.573856]; // Moscow coordinates
+
+const DEFAULT_CENTER: [number, number] = [55.751574, 37.573856]; // Координаты Москвы
+
 const AddressPickerModal: React.FC<AddressPickerModalProps> = ({
   visible,
   onClose,
   onSelectLocation,
+  initialCoordinates,
 }) => {
   const [selectedCoords, setSelectedCoords] = useState<[number, number] | null>(
     null
   );
-  const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
+  const [mapCenter, setMapCenter] = useState<[number, number]>(DEFAULT_CENTER);
+
+  // Если переданы initialCoordinates, используем их как центр и начальную метку
+  useEffect(() => {
+    if (initialCoordinates) {
+      const coords: [number, number] = [
+        initialCoordinates.latitude,
+        initialCoordinates.longitude,
+      ];
+      setMapCenter(coords);
+      setSelectedCoords(coords);
+    } else {
+      getUserLocation();
+    }
+  }, [initialCoordinates]);
 
   const getUserLocation = async () => {
     try {
@@ -50,59 +70,63 @@ const AddressPickerModal: React.FC<AddressPickerModalProps> = ({
     }
   };
 
-  useEffect(() => {
-    getUserLocation();
-  }, []);
-
-  const htmlContent = `
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <meta charset="utf-8">
-      <title>Выбор адреса</title>
-      <script src="https://api-maps.yandex.ru/2.1/?apikey=${API_KEY}&lang=ru_RU"></script>
-      <style>
-        html, body, #map {
-          width: 100%;
-          height: 100%;
-          margin: 0;
-          padding: 0;
-        }
-      </style>
-    </head>
-    <body>
-      <div id="map"></div>
-      <script>
-        ymaps.ready(function () {
-        var myMap = new ymaps.Map("map", {
-            center: [${mapCenter[0]}, ${mapCenter[1]}],
-            zoom: 9
-        });
-          var myPlacemark;
-
-          // При клике на карту устанавливаем метку
-          myMap.events.add("click", function (e) {
-            var coords = e.get("coords");
-            if (myPlacemark) {
-              myMap.geoObjects.remove(myPlacemark);
+  // Генерируем HTML-контент динамически, учитывая выбранные координаты
+  const htmlContent = useMemo(() => {
+    // Если выбраны координаты, используем их для центра и отображения метки
+    const centerCoords = selectedCoords ? selectedCoords : mapCenter;
+    const markerCode = selectedCoords
+      ? `
+        var myPlacemark = new ymaps.Placemark([${selectedCoords[0]}, ${selectedCoords[1]}], {}, { preset: "islands#redDotIcon" });
+        myMap.geoObjects.add(myPlacemark);
+      `
+      : "";
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Выбор адреса</title>
+          <script src="https://api-maps.yandex.ru/2.1/?apikey=${API_KEY}&lang=ru_RU"></script>
+          <style>
+            html, body, #map {
+              width: 100%;
+              height: 100%;
+              margin: 0;
+              padding: 0;
             }
-            myPlacemark = new ymaps.Placemark(coords, {}, {
-              preset: "islands#redDotIcon"
+          </style>
+        </head>
+        <body>
+          <div id="map"></div>
+          <script>
+            ymaps.ready(function () {
+              var myMap = new ymaps.Map("map", {
+                center: [${centerCoords[0]}, ${centerCoords[1]}],
+                zoom: 9
+              });
+              ${markerCode}
+              // При клике на карту устанавливаем метку
+              myMap.events.add("click", function (e) {
+                var coords = e.get("coords");
+                if (typeof myPlacemark !== 'undefined') {
+                  myMap.geoObjects.remove(myPlacemark);
+                }
+                myPlacemark = new ymaps.Placemark(coords, {}, {
+                  preset: "islands#redDotIcon"
+                });
+                myMap.geoObjects.add(myPlacemark);
+                if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+                  window.ReactNativeWebView.postMessage(JSON.stringify({ coords: coords }));
+                } else if(window.parent && window.parent.postMessage) {
+                  window.parent.postMessage(JSON.stringify({ coords: coords }), "*");
+                }
+              });
             });
-            myMap.geoObjects.add(myPlacemark);
-            // Отправляем выбранные координаты в React Native
-            if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
-              window.ReactNativeWebView.postMessage(JSON.stringify({ coords: coords }));
-            } else if(window.parent && window.parent.postMessage) {
-              // Для iframe в web-версии
-              window.parent.postMessage(JSON.stringify({ coords: coords }), "*");
-            }
-          });
-        });
-      </script>
-    </body>
-  </html>
-  `;
+          </script>
+        </body>
+      </html>
+    `;
+  }, [mapCenter, selectedCoords]);
 
   const handleMessage = (event: any) => {
     try {

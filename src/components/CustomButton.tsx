@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fdc63b",
   },
   logoutButton: {
-    backgroundColor: "#ff0000",
+    backgroundColor: "#d9534f",
   },
   buttonText: {
     fontWeight: "bold",
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     color: "#3c3c3c",
   },
   logoutButtonText: {
-    color: "white",
+    color: "#3c3c3c",
   },
 });
 

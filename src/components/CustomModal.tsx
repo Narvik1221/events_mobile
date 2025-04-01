@@ -22,7 +22,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
   children,
   title,
   confirmText = "Подтвердить",
-  cancelText = "Отмена",
+  cancelText = "Закрыть",
   showCloseButton = true,
   type,
 }) => {
