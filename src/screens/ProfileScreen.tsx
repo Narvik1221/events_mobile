@@ -250,7 +250,7 @@ const ProfileScreen: React.FC = () => {
             ) : (
               <ProfileImage
                 style={styles.image}
-                color={"#3c3c3c"}
+                color={"#000000"}
                 width={100}
                 height={100}
               />
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     borderRadius: 50,
   },
-  deleteButton: { backgroundColor: "red", marginTop: 20, color: "#3c3c3c" },
+  deleteButton: { backgroundColor: "red", marginTop: 20, color: "#000000" },
   loader: { flex: 1, justifyContent: "center" },
   errorText: { color: "red", textAlign: "center", marginVertical: 10 },
   logout: {

@@ -152,8 +152,20 @@ const EditEventScreen: React.FC<Props> = ({ route, navigation }) => {
         data: formData,
       }).unwrap();
       console.log("Ответ сервера:", response);
-      navigation.navigate("MyEventsScreen");
+      dispatch(
+        showAlert({
+          message: `Мероприятие успешно обновлено!`,
+          type: "success",
+        })
+      );
+      navigation.navigate("EditEventsScreen");
     } catch (err) {
+      dispatch(
+        showAlert({
+          message: `Ошибка обновления мероприятия: ${err}`,
+          type: "error",
+        })
+      );
       console.error("Ошибка обновления мероприятия:", err);
     }
   };

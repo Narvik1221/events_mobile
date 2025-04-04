@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 10,
-    paddingVertical: 24,
+    paddingVertical: 44,
     backgroundColor: "#fff",
   },
   row: {
@@ -87,12 +87,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     textAlign: "center",
-    marginBottom: 10,
+    paddingVertical: 10,
     position: "absolute",
     left: 0,
     right: 0,
     pointerEvents: "none",
-    fontWeight: "bold",
   },
   // Стили для renderItem аналогичны тем, что используются в MyEventsScreen:
   item: {

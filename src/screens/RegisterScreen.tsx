@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     alignItems: "center",
   },
-  buttonText: { color: "#3c3c3c", fontSize: 16 },
+  buttonText: { color: "#000000", fontSize: 16 },
   link: { color: "blue", marginTop: 15, textAlign: "center" },
   error: { color: "red", marginTop: 10, textAlign: "center" },
   image: { width: 100, height: 100, alignSelf: "center", marginVertical: 10 },

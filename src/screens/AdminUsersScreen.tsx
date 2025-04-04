@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, StyleSheet, Alert } from "react-native";
+import { View, Text, FlatList, StyleSheet, Alert, Image } from "react-native";
 import { useGetUsersQuery, useToggleUserBlockMutation } from "../api/api";
 import CustomButton from "../components/CustomButton";
+import { getAvatarUri } from "../lib/getAvatarUri";
 
 const AdminEventsScreen: React.FC = () => {
   const {
@@ -37,6 +38,11 @@ const AdminEventsScreen: React.FC = () => {
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={styles.userCard}>
+            <Image
+              source={{ uri: getAvatarUri(item.avatar) }}
+              style={styles.avatar}
+            />
+
             <Text style={styles.userText}>
               {item.firstName} {item.lastName}
             </Text>
@@ -82,6 +88,12 @@ const styles = StyleSheet.create({
   status: {
     fontSize: 14,
     color: "gray",
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginRight: 10,
   },
 });
 

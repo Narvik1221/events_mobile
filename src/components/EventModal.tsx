@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   joinButtonText: {
-    color: "#3c3c3c",
+    color: "#000000",
     fontSize: 16,
     fontWeight: "bold",
   },
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   participantsButtonText: {
-    color: "#3c3c3c",
+    color: "#000000",
     fontSize: 16,
     fontWeight: "bold",
   },

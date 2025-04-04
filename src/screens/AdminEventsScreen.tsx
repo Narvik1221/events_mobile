@@ -20,7 +20,8 @@ import EventModal from "../components/EventModal";
 import CustomModal from "../components/CustomModal";
 import { getAvatarUri } from "../lib/getAvatarUri";
 import CustomButton from "../components/CustomButton";
-
+import { showAlert } from "../features/alertSlice";
+import { useDispatch } from "react-redux";
 type EventType = {
   id: number;
   name: string;
@@ -41,7 +42,7 @@ const EventsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   // Состояние модального окна для фильтров
   const [filtersModalVisible, setFiltersModalVisible] = useState(false);
-
+  const dispatch = useDispatch();
   // Запросы через RTK Query
   const { data: categories } = useGetCategoriesQuery();
   const {
@@ -91,11 +92,22 @@ const EventsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       setDeleteConfirmModalVisible(false);
       setEventToDelete(null);
       refetch();
+      dispatch(
+        showAlert({
+          message: `мероприятие успешно удалено!`,
+          type: "success",
+        })
+      );
     } catch (error) {
-      console.error("Ошибка удаления мероприятия", error);
-      Alert.alert("Ошибка", "Не удалось удалить мероприятие");
+      dispatch(
+        showAlert({
+          message: `Ошибка удаления мероприятия: ${error?.data?.message}`,
+          type: "error",
+        })
+      );
     }
   };
+  const activeFilters = search.trim() !== "" || selectedCategory !== null;
 
   const renderItem = ({ item }: { item: EventType }) => (
     <View style={styles.eventItem}>
@@ -128,20 +140,24 @@ const EventsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     <View style={styles.container}>
       <Text style={styles.title}>Список мероприятий</Text>
 
-      {/* Поле для поиска */}
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Поиск мероприятий..."
-        value={search}
-        onChangeText={setSearch}
-      />
-
-      {/* Кнопка открытия модального окна с фильтрами */}
-      <CustomButton
-        title="Параметры фильтра"
-        onPress={() => setFiltersModalVisible(true)}
-      ></CustomButton>
-
+      <View style={styles.searchRow}>
+        {/* Кнопка параметров */}
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            activeFilters && styles.filterButtonActive,
+          ]}
+          onPress={() => setFiltersModalVisible(true)}
+        >
+          <Text style={styles.filterButtonText}>Параметры</Text>
+        </TouchableOpacity>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Поиск меропритий..."
+          value={search}
+          onChangeText={setSearch}
+        />
+      </View>
       {isLoading ? (
         <Text>Загрузка...</Text>
       ) : error ? (
@@ -210,26 +226,9 @@ const EventsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
+  container: { flex: 1, paddingTop: 24, paddingLeft: 10, paddingRight: 10 },
   title: { fontSize: 24, marginBottom: 20, textAlign: "center" },
-  searchInput: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 10,
-    marginBottom: 10,
-    borderRadius: 5,
-  },
-  filterButton: {
-    backgroundColor: "#fdc63b",
-    padding: 10,
-    borderRadius: 5,
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  filterButtonText: {
-    color: "#3c3c3c",
-    fontSize: 16,
-  },
+
   eventItem: { marginBottom: 10 },
   item: {
     flexDirection: "row",
@@ -251,7 +250,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#d9534f",
   },
   deleteButtonText: {
-    color: "#3c3c3c",
+    color: "#000000",
     fontSize: 16,
     fontWeight: "bold",
   },
@@ -267,6 +266,31 @@ const styles = StyleSheet.create({
   picker: {
     height: 50,
     width: "100%",
+  },
+  searchRow: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    marginBottom: 10,
+  },
+  filterButton: {
+    padding: 10,
+    backgroundColor: "#cad3e5",
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  filterButtonActive: {
+    backgroundColor: "#fdc63b",
+  },
+  filterButtonText: {
+    color: "#000000",
+    fontSize: 16,
+  },
+  searchInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#cad3e5",
+    padding: 8,
+    borderRadius: 5,
   },
 });
 

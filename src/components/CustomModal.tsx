@@ -94,10 +94,10 @@ const styles = StyleSheet.create({
   },
   confirmButtonText: {
     fontSize: 16,
-    color: "#3c3c3cs",
+    color: "#000000s",
   },
   closeButton: { padding: 10 },
-  closeButtonText: { fontSize: 16, color: "#3c3c3cs" },
+  closeButtonText: { fontSize: 16, color: "#000000s" },
 
   defaultModal: { backgroundColor: "white" },
   errorModal: {},

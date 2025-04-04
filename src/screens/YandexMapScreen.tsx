@@ -20,7 +20,7 @@ import CustomButton from "../components/CustomButton";
 import CustomModal from "../components/CustomModal";
 
 const API_KEY = "b06fdb53-2726-4de6-8245-aa3ab977de84";
-const MOSCOW_COORDS = [55.751574, 37.573856];
+const OMSK_COORDS = [54.9914, 73.3716];
 
 type EventStatus = any;
 
@@ -123,9 +123,9 @@ const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
     }
   };
 
-  useEffect(() => {
-    getUserLocation();
-  }, []);
+  // useEffect(() => {
+  //   getUserLocation();
+  // }, []);
 
   // Массив маркеров для карты
   const markersData = events
@@ -145,7 +145,7 @@ const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
   const defaultCenter =
     userLocation && !(userLocation.lat === 0 && userLocation.lng === 0)
       ? `[${userLocation.lat}, ${userLocation.lng}]`
-      : `[${MOSCOW_COORDS[0]}, ${MOSCOW_COORDS[1]}]`;
+      : `[${OMSK_COORDS[0]}, ${OMSK_COORDS[1]}]`;
 
   // HTML-код для карты
   const htmlContent = `
@@ -166,7 +166,7 @@ const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
         .custom-marker {
           background-size: cover;
           border-radius: 50%;
-          border: 1px solid #3c3c3c;
+          border: 1px solid #000000;
         }
       </style>
     </head>
@@ -185,7 +185,7 @@ const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
         var defaultCenter = ${defaultCenter};
         var myMap = new ymaps.Map("map", {
             center: defaultCenter,
-            zoom: 9
+            zoom: 12
         }, {
             searchControlProvider: "yandex#search"
         });
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fdc63b",
   },
   filterButtonText: {
-    color: "#3c3c3c",
+    color: "#000000",
     fontSize: 16,
   },
   searchInput: {
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     alignSelf: "center",
   },
-  locationButtonText: { color: "#3c3c3c", fontSize: 16 },
+  locationButtonText: { color: "#000000", fontSize: 16 },
   mapContainer: { flex: 1 },
   webview: { flex: 1 },
   iframe: { width: "100%", height: "100%" },
@@ -487,11 +487,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#fdc63b",
   },
   statusButtonText: {
-    color: "#3c3c3c",
+    color: "#000000",
     fontSize: 16,
   },
   statusButtonTextActive: {
-    color: "white",
+    color: "#000000",
     fontWeight: "bold",
   },
 });

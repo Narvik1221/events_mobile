@@ -2,14 +2,12 @@ import React, { useEffect, useState, useMemo } from "react";
 import { View, Text, StyleSheet, Platform } from "react-native";
 import { WebView } from "react-native-webview";
 import CustomModal from "./CustomModal"; // Проверьте корректность пути импорта
-import { Dimensions } from "react-native";
 import * as Location from "expo-location";
 
-// Ваш API-ключ Yandex Maps
 const API_KEY = "b06fdb53-2726-4de6-8245-aa3ab977de84";
 
 // Определяем высоту для карты (для web и native)
-const MAP_HEIGHT = 300;
+const MAP_HEIGHT = 400;
 
 // Добавляем пропс initialCoordinates для предварительной установки метки
 type AddressPickerModalProps = {
@@ -19,7 +17,7 @@ type AddressPickerModalProps = {
   initialCoordinates?: { latitude: number; longitude: number };
 };
 
-const DEFAULT_CENTER: [number, number] = [55.751574, 37.573856]; // Координаты Москвы
+const DEFAULT_CENTER: [number, number] = [54.9914, 73.3716];
 
 const AddressPickerModal: React.FC<AddressPickerModalProps> = ({
   visible,
@@ -66,7 +64,7 @@ const AddressPickerModal: React.FC<AddressPickerModalProps> = ({
         console.warn("Received invalid coordinates");
       }
     } catch (error) {
-      console.error("Error fetching user location:", error);
+      // console.error("Error fetching user location:", error);
     }
   };
 
@@ -102,7 +100,7 @@ const AddressPickerModal: React.FC<AddressPickerModalProps> = ({
             ymaps.ready(function () {
               var myMap = new ymaps.Map("map", {
                 center: [${centerCoords[0]}, ${centerCoords[1]}],
-                zoom: 9
+                zoom: 12
               });
               ${markerCode}
               // При клике на карту устанавливаем метку
@@ -126,7 +124,7 @@ const AddressPickerModal: React.FC<AddressPickerModalProps> = ({
         </body>
       </html>
     `;
-  }, [mapCenter, selectedCoords]);
+  }, [mapCenter]);
 
   const handleMessage = (event: any) => {
     try {
@@ -197,7 +195,7 @@ const AddressPickerModal: React.FC<AddressPickerModalProps> = ({
 
 const styles = StyleSheet.create({
   mapContainer: {
-    width: "100%",
+    width: "110%",
     height: MAP_HEIGHT,
   },
   webview: { flex: 1 },

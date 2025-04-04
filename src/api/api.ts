@@ -125,7 +125,23 @@ export const apiSlice = createApi({
         }
         return url;
       },
+      providesTags: (result, error, args) =>
+        result
+          ? [
+              // Для каждого полученного события назначаем тег Event с id события
+              ...result.map((event: any) => ({ type: "Event", id: event.id })),
+              // Добавляем общий тег для списка событий пользователя
+              { type: "UserEvents", id: "LIST" },
+              // Добавляем общий тег для участников мероприятия
+              { type: "EventParticipants", id: "LIST" },
+            ]
+          : [
+              { type: "Event", id: "LIST" },
+              { type: "UserEvents", id: "LIST" },
+              { type: "EventParticipants", id: "LIST" },
+            ],
     }),
+
     createEvent: builder.mutation<
       { message: string; eventId: number },
       FormData
@@ -222,6 +238,10 @@ export const apiSlice = createApi({
         method: "PUT",
         body: data,
       }),
+      invalidatesTags: (result, error, eventId) => [
+        { type: "Event", id: "LIST" },
+        { type: "UserEvents", id: "LIST" },
+      ],
     }),
     getMyEvents: builder.query<Event[], void>({
       query: () => "events/my",

@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
     alignSelf: "flex-start",
   },
-  buttonText: { color: "#3c3c3c" },
+  buttonText: { color: "#000000" },
   item: {
     flexDirection: "column",
 

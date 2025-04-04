@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     width: "100%",
     marginBottom: 10,
   },
-  deleteButtonText: { color: "#3c3c3c", fontSize: 16, fontWeight: "bold" },
+  deleteButtonText: { color: "#000000", fontSize: 16, fontWeight: "bold" },
 });
 
 export default MyEventModal;

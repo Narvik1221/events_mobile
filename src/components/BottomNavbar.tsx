@@ -34,7 +34,7 @@ const BottomNavBar = () => {
   const activeRouteName = currentRouteName || defaultRoute;
 
   const getIconColor = (routeName: string) => {
-    return activeRouteName === routeName ? "#fdc63b" : "#3c3c3c";
+    return activeRouteName === routeName ? "#fdc63b" : "#000000";
   };
 
   const handleNavigation = (routeName: keyof RootStackParamList) => {
@@ -42,10 +42,11 @@ const BottomNavBar = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID="BottomNavBar">
       {isAdmin ? (
         <>
           <TouchableOpacity
+            testID="AdminEventsButton"
             onPress={() => handleNavigation("AdminEvents")}
             style={styles.button}
           >
@@ -56,6 +57,7 @@ const BottomNavBar = () => {
             />
           </TouchableOpacity>
           <TouchableOpacity
+            testID="AdminUsersButton"
             onPress={() => handleNavigation("AdminUsers")}
             style={styles.button}
           >
@@ -69,13 +71,15 @@ const BottomNavBar = () => {
       ) : (
         <>
           <TouchableOpacity
+            testID="EventsButton"
             onPress={() => handleNavigation("Events")}
             style={styles.button}
           >
             <EventsIcon width={32} height={32} color={getIconColor("Events")} />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => handleNavigation("CreateEvent")}
+            testID="CreateEventButton"
+            onPress={() => handleNavigation(token ? "CreateEvent" : "Login")}
             style={styles.button}
           >
             <CreateEventIcon
@@ -85,7 +89,8 @@ const BottomNavBar = () => {
             />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => handleNavigation("MyEvents")}
+            testID="FavoritesButton"
+            onPress={() => handleNavigation(token ? "MyEvents" : "Login")}
             style={styles.button}
           >
             <FavoritesIcon
@@ -97,6 +102,7 @@ const BottomNavBar = () => {
         </>
       )}
       <TouchableOpacity
+        testID="ProfileButton"
         onPress={() => handleNavigation(token ? "Profile" : "Login")}
         style={styles.button}
       >

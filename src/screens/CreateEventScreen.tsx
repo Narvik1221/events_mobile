@@ -108,6 +108,25 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
 
   // Функция создания события
   const handleCreateEvent = async () => {
+    // Проверка обязательных полей
+    if (
+      !name ||
+      !startDate ||
+      !endDate ||
+      latitude === undefined ||
+      longitude === undefined ||
+      !selectedCategories ||
+      selectedCategories.length === 0
+    ) {
+      dispatch(
+        showAlert({
+          message: "Пожалуйста, заполните все обязательные поля",
+          type: "error",
+        })
+      );
+      return;
+    }
+
     const formData = new FormData();
     formData.append("name", name);
     formData.append("startDate", startDate.toISOString());
@@ -129,16 +148,16 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
       console.log("✅ Ответ сервера:", response);
       dispatch(
         showAlert({
-          message: `Мероприятие успешно создано!`,
+          message: "Мероприятие успешно создано!",
           type: "success",
         })
       );
       navigation.navigate("Events");
-    } catch (err) {
+    } catch (err: any) {
       dispatch(
         showAlert({
-          message: `Ошибка создания мероприятия: ${err}`,
-          type: "success",
+          message: `Ошибка создания мероприятия: ${err?.data?.message}`,
+          type: "error",
         })
       );
       console.error("❌ Ошибка создания мероприятия:", err);
@@ -220,6 +239,7 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
       ) : (
         <View style={styles.pickerContainer}>
           <Picker
+            testID="categoryPicker"
             selectedValue={pickerValue}
             onValueChange={(itemValue) => setPickerValue(itemValue)}
             style={styles.picker}
@@ -314,7 +334,6 @@ const styles = StyleSheet.create({
     borderColor: "#cad3e5",
     borderWidth: 1,
     borderRadius: 5,
-    marginBottom: 10,
   },
   button: {
     backgroundColor: "#fdc63b",

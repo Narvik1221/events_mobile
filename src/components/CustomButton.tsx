@@ -69,10 +69,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   defaultButtonText: {
-    color: "#3c3c3c",
+    color: "#000000",
   },
   logoutButtonText: {
-    color: "#3c3c3c",
+    color: "#000000",
   },
 });
 
