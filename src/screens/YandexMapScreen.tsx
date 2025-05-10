@@ -27,21 +27,19 @@ type EventStatus = any;
 const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
   const dispatch = useDispatch();
   const [search, setSearch] = useState("");
-  // Фильтры вынесены в модальное окно
+
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  // По умолчанию радиус не ограничен
+
   const [radius, setRadius] = useState<number | undefined>(undefined);
   const [userLocation, setUserLocation] = useState<{
     lat: number;
     lng: number;
   } | null>(null);
-  // Новый фильтр по статусу мероприятия: "all", "current", "upcoming"
+
   const [eventStatus, setEventStatus] = useState<EventStatus>(null);
 
-  // Состояние модального окна для фильтров
   const [filtersModalVisible, setFiltersModalVisible] = useState(false);
 
-  // Передаём eventStatus только если выбран фильтр отличный от "all"
   const eventsQueryParams = {
     categoryId: selectedCategory || undefined,
     search: search.trim() ? search.trim() : undefined,
@@ -51,7 +49,6 @@ const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
     eventStatus: eventStatus !== "all" ? eventStatus : undefined,
   };
 
-  // Получаем данные из API
   const { data: categories } = useGetCategoriesQuery();
   const { data: events } = useGetEventsQuery(eventsQueryParams) as any;
 
@@ -68,7 +65,6 @@ const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
     setSelectedEvent(null);
   };
 
-  // Функция получения координат
   const getUserLocation = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -123,11 +119,6 @@ const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
     }
   };
 
-  // useEffect(() => {
-  //   getUserLocation();
-  // }, []);
-
-  // Массив маркеров для карты
   const markersData = events
     ? events.map((event: any) => ({
         id: event.id,
@@ -147,7 +138,6 @@ const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
       ? `[${userLocation.lat}, ${userLocation.lng}]`
       : `[${OMSK_COORDS[0]}, ${OMSK_COORDS[1]}]`;
 
-  // HTML-код для карты
   const htmlContent = `
   <!DOCTYPE html>
   <html>
@@ -174,11 +164,11 @@ const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
       <div id="map"></div>
         <script>
       ymaps.ready(function () {
-        // Определяем минимальный размер маркера в пикселях
+      
         var minMarkerSize = 35;
-        // Рассчитываем размер маркера как 5% от меньшей из сторон окна
+        
         var calculatedSize = Math.min(window.innerWidth, window.innerHeight) * 0.05;
-        // Устанавливаем окончательный размер маркера: либо рассчитанный, либо минимальный, если рассчитанный меньше
+   
         var markerSize = Math.max(calculatedSize, minMarkerSize);
 
         var markers = ${markersJson};
@@ -229,7 +219,6 @@ const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
   </html>
   `;
 
-  // Для веб-версии: слушатель сообщений из iframe
   useEffect(() => {
     if (Platform.OS === "web") {
       const messageHandler = (event: MessageEvent) => {
@@ -250,11 +239,9 @@ const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
     }
   }, []);
 
-  // Активные фильтры: если введён поиск или выбрана категория или установлен радиус
   const activeFilters =
     search.trim() !== "" || selectedCategory !== null || radius !== undefined;
 
-  // Функция сброса фильтров (категория, радиус и статус)
   const resetFilters = () => {
     setSelectedCategory(null);
     setRadius(undefined);
@@ -267,7 +254,6 @@ const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Мероприятия на карте</Text>
       <View style={styles.searchRow}>
-        {/* Кнопка параметров */}
         <TouchableOpacity
           style={[
             styles.filterButton,
@@ -318,7 +304,7 @@ const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
           onClose={closeModal}
         />
       )}
-      {/* Модальное окно для фильтров с кнопкой "Сбросить" */}
+
       <CustomModal
         visible={filtersModalVisible}
         onClose={() => setFiltersModalVisible(false)}
@@ -354,7 +340,7 @@ const YandexMapScreen: React.FC<{ navigation?: any }> = () => {
             minimumTrackTintColor="#fdc63b"
             maximumTrackTintColor="#cad3e5"
           />
-          {/* Панель фильтра по статусу мероприятия */}
+
           <Text style={[styles.modalLabel, { marginTop: 10 }]}>
             Статус мероприятия:
           </Text>

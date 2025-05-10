@@ -104,7 +104,7 @@ const EventModal: React.FC<EventModalProps> = ({
         style={styles.participantsButton}
         onPress={() => {
           onClose();
-          navigation.navigate("EventParticipantsScreen", {
+          navigation.navigate("EventOrganizerScreen", {
             eventId: event?.id,
           });
         }}

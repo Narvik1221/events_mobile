@@ -282,6 +282,9 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: ["UserEvents"],
     }),
+    getEventCreator: builder.query<any, number>({
+      query: (eventId) => `/events/${eventId}/creator`,
+    }),
   }),
 });
 
@@ -305,4 +308,5 @@ export const {
   useDeleteEventMutation,
   useGetEventParticipantsQuery,
   useDeleteUserEventMutation,
+  useGetEventCreatorQuery,
 } = apiSlice;

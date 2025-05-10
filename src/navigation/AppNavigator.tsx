@@ -19,6 +19,8 @@ import EditEventScreen from "../screens/EditEventScreen";
 import AdminEventsScreen from "../screens/AdminEventsScreen";
 import AdminUsersScreen from "../screens/AdminUsersScreen";
 import EventParticipantsScreen from "../screens/EventParticipantsScreen";
+import EventOrganizerScreen from "../screens/EventOrganizerScreen";
+
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
@@ -31,6 +33,7 @@ export type RootStackParamList = {
   AdminUsers: undefined;
   AdminEvents: undefined;
   EventParticipantsScreen: any;
+  EventOrganizerScreen: any;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -80,6 +83,10 @@ const AppNavigator = () => {
           <Stack.Screen
             name="EventParticipantsScreen"
             component={EventParticipantsScreen}
+          />
+          <Stack.Screen
+            name="EventOrganizerScreen"
+            component={EventOrganizerScreen}
           />
         </Stack.Navigator>
       </ScreenContainer>

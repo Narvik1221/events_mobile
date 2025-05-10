@@ -17,7 +17,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import CustomButton from "../components/CustomButton";
 import { useCreateEventMutation, useGetCategoriesQuery } from "../api/api";
-import AddressPickerModal from "../components/AddressPickerModal"; // путь к модальному окну
+import AddressPickerModal from "../components/AddressPickerModal";
 import { useDispatch } from "react-redux";
 
 type Props = any;
@@ -47,10 +47,8 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
   } = useGetCategoriesQuery();
   const [createEvent, { error, isLoading }] = useCreateEventMutation();
 
-  // Состояние для модального окна выбора адреса
   const [addressModalVisible, setAddressModalVisible] = useState(false);
 
-  // Функция выбора изображения
   const pickImage = async () => {
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -90,7 +88,6 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  // Добавление выбранной категории
   const addCategory = () => {
     if (pickerValue !== null && !selectedCategories.includes(pickerValue)) {
       setSelectedCategories([...selectedCategories, pickerValue]);
@@ -101,14 +98,11 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  // Удаление категории из списка выбранных
   const removeCategory = (catId: number) => {
     setSelectedCategories(selectedCategories.filter((id) => id !== catId));
   };
 
-  // Функция создания события
   const handleCreateEvent = async () => {
-    // Проверка обязательных полей
     if (
       !name ||
       !startDate ||
@@ -140,12 +134,11 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
       formData.append("avatar", avatarFile as any);
     }
 
-    console.log("📤 Отправляем FormData:");
     formData.forEach((value, key) => console.log(`  ${key}: ${value}`));
 
     try {
       const response = await createEvent(formData).unwrap();
-      console.log("✅ Ответ сервера:", response);
+      console.log(" Ответ сервера:", response);
       dispatch(
         showAlert({
           message: "Мероприятие успешно создано!",
@@ -160,11 +153,10 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
           type: "error",
         })
       );
-      console.error("❌ Ошибка создания мероприятия:", err);
+      console.error(" Ошибка создания мероприятия:", err);
     }
   };
 
-  // Callback из AddressPickerModal – устанавливаем выбранные координаты
   const handleSelectLocation = (coords: [number, number]) => {
     setLatitude(String(coords[0]));
     setLongitude(String(coords[1]));
@@ -288,7 +280,6 @@ const CreateEventScreen: React.FC<Props> = ({ navigation }) => {
         disabled={isLoading}
       />
 
-      {/* Модальное окно для выбора адреса */}
       <AddressPickerModal
         visible={addressModalVisible}
         onClose={() => setAddressModalVisible(false)}
